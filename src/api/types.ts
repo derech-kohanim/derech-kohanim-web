@@ -1,6 +1,7 @@
 import type {
   AuthResponse,
   CreateReportRequest,
+  DangerZoneCollection,
   GoogleAuthRequest,
   LatLng,
   Language,
@@ -77,6 +78,8 @@ export interface ApiClient {
   recordRecentPlace(place: RecordRecentInput): Promise<void>;
 
   zones(stringency: Stringency): Promise<ZoneCollection>;
+  /** Danger zones (Area A). Independent of the stringency layers. */
+  dangerZones(): Promise<DangerZoneCollection>;
   providers(): Promise<ProviderInfo[]>;
   computeRoute(body: RouteRequest, options?: RequestOptions): Promise<RoutePlan>;
   routeEvents(routeId: string): Promise<RouteEventBundle>;

@@ -26,6 +26,7 @@ import { env } from '@/env';
 import { currentLanguage } from '@/i18n';
 import { formatArrival, formatDistance, formatDuration } from '@/lib/format';
 import { maneuverIcon, maneuverText } from '@/lib/maneuver';
+import { referenceBounds, zonesNear } from '@/lib/zoneFilter';
 import { EVENT_EMOJI, eventLabel, type RouteEventType } from '@/navigation/events';
 import { ReportSheet } from '@/navigation/ReportSheet';
 import { StepList } from '@/navigation/StepList';
@@ -53,7 +54,7 @@ export function Navigation() {
   const language = currentLanguage();
 
   const { preferences, update } = usePreferences();
-  const { route, zones, destination } = useTrip();
+  const { route, zones, dangerZones, destination } = useTrip();
   const run = useNavigationRun(route, simulated);
 
   const [camera, setCamera] = useState<MapCamera>(DEFAULT_CAMERA);
@@ -86,6 +87,22 @@ export function Navigation() {
 
   const maneuver = route?.maneuvers[run.currentManeuverIndex] ?? null;
   const next = route?.maneuvers[run.currentManeuverIndex + 1] ?? null;
+
+  // Draw only the zones near the route, so country-wide data stays performant while driving.
+  const nearbyZones = useMemo(() => {
+    const bounds = referenceBounds([destination?.location ?? null], [route?.geometry ?? null], 0.05);
+    return {
+      zones: zonesNear(zones?.features ?? [], bounds),
+      danger: zonesNear(dangerZones?.features ?? [], bounds),
+    };
+  }, [zones, dangerZones, destination, route]);
+
+  // The driving zone alert stays glanceable: the name is in the banner, the city and the short
+  // reason (the halachic why) go on the secondary line.
+  const alertZone = run.zoneAlert?.zone ?? null;
+  const zoneReason = alertZone
+    ? [alertZone.city, alertZone.description].filter(Boolean).join(' · ')
+    : '';
 
   const instruction = useMemo(
     () => (maneuver ? maneuverText(maneuver, t, language) : ''),
@@ -177,9 +194,14 @@ export function Navigation() {
         </div>
       )}
 
+      {zoneActive && zoneReason && (
+        <div className={`${styles.navThen} ${styles['navThen--zone']}`}>{zoneReason}</div>
+      )}
+
       <div className={styles.navMap}>
         <MapCanvas
-          zones={zones?.features ?? []}
+          zones={nearbyZones.zones}
+          dangerZones={nearbyZones.danger}
           origin={null}
           destination={destination?.location ?? null}
           route={route.geometry}

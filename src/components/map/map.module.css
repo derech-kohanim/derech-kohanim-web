@@ -46,6 +46,19 @@
   stroke-dasharray: 8 5;
 }
 
+/* Danger zones (Area A): a separate axis, so its own violet token and a solid, heavier outline
+   that never reads as one of the three dashed stringency layers. */
+.zoneDanger {
+  fill: hsl(var(--color-zone-danger) / 0.32);
+  stroke: hsl(var(--color-zone-danger));
+  stroke-width: 3;
+}
+
+/* A tappable zone polygon. */
+.zoneInteractive {
+  cursor: pointer;
+}
+
 .routeCasing {
   fill: none;
   stroke: hsl(var(--color-surface));
@@ -271,4 +284,9 @@
 .legendSwatch--machmirim {
   background: hsl(var(--color-zone-machmirim) / 0.5);
   box-shadow: inset 0 0 0 2px hsl(var(--color-zone-machmirim));
+}
+
+.legendSwatch--danger {
+  background: hsl(var(--color-zone-danger) / 0.5);
+  box-shadow: inset 0 0 0 2px hsl(var(--color-zone-danger));
 }

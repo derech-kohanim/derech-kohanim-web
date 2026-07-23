@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { PlaceCategory } from '@dk/shared';
 import {
   AlertTriangle,
@@ -19,11 +19,14 @@ import { api } from '@/api';
 import { CertaintyIndicator } from '@/components/certainty/CertaintyIndicator';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { MapCanvas } from '@/components/map/MapCanvas';
+import { ZoneInfoSheet } from '@/components/map/ZoneInfoSheet';
 import { ZoneLegend } from '@/components/map/ZoneLegend';
+import type { SelectedZone } from '@/components/map/types';
 import { Badge, Button, IconButton, ListItem, Sheet, Switch, useToast } from '@/components/ui';
 import { currentLanguage } from '@/i18n';
 import { formatArrival, formatDistance, formatDuration } from '@/lib/format';
 import { isZoneManeuver, maneuverIcon, maneuverText } from '@/lib/maneuver';
+import { referenceBounds, zonesNear } from '@/lib/zoneFilter';
 import { usePreferences } from '@/state/PreferencesProvider';
 import { useTrip } from '@/state/TripProvider';
 import { voiceEngine } from '@/voice/VoiceEngine';
@@ -41,11 +44,37 @@ export function RouteReview() {
   const navigate = useNavigate();
   const toast = useToast();
   const { preferences, update } = usePreferences();
-  const { destination, route, routes, selectRoute, unavoidedRoute, status, errorCode, zones, origin, recompute } =
-    useTrip();
+  const {
+    destination,
+    route,
+    routes,
+    selectRoute,
+    unavoidedRoute,
+    status,
+    errorCode,
+    zones,
+    dangerZones,
+    origin,
+    recompute,
+  } = useTrip();
   const language = currentLanguage();
   const [saveOpen, setSaveOpen] = useState(false);
   const [showUnavoided, setShowUnavoided] = useState(false);
+  const [selectedZone, setSelectedZone] = useState<SelectedZone | null>(null);
+
+  // Keep only the zones near this route/endpoints, so country-wide data neither distorts the
+  // framing nor draws hundreds of polygons.
+  const nearbyZones = useMemo(() => {
+    const bounds = referenceBounds(
+      [origin, destination?.location ?? null],
+      [route?.geometry ?? null, unavoidedRoute?.geometry ?? null],
+      0.05,
+    );
+    return {
+      zones: zonesNear(zones?.features ?? [], bounds),
+      danger: zonesNear(dangerZones?.features ?? [], bounds),
+    };
+  }, [zones, dangerZones, origin, destination, route, unavoidedRoute]);
 
   useEffect(() => {
     if (!destination) navigate('/', { replace: true });
@@ -124,7 +153,9 @@ export function RouteReview() {
 
       <div className={styles.routeMap}>
         <MapCanvas
-          zones={zones?.features ?? []}
+          zones={nearbyZones.zones}
+          dangerZones={nearbyZones.danger}
+          onZoneSelect={setSelectedZone}
           origin={origin}
           destination={destination?.location ?? null}
           // Only draw a line for a settled route. While computing (the dialog is up) or idle,
@@ -140,8 +171,12 @@ export function RouteReview() {
           unavoidedRoute={status === 'ready' && showUnavoided ? unavoidedRoute?.geometry ?? null : null}
           verifiedClean={route?.verifiedClean ?? true}
         />
-        {zones && zones.features.length > 0 && <ZoneLegend className={styles.routeLegend} />}
+        {(nearbyZones.zones.length > 0 || nearbyZones.danger.length > 0) && (
+          <ZoneLegend className={styles.routeLegend} showDanger={nearbyZones.danger.length > 0} />
+        )}
       </div>
+
+      <ZoneInfoSheet selection={selectedZone} onClose={() => setSelectedZone(null)} />
 
       <div className={styles.routePanel}>
         {/* The compute step reports through the blocking ComputingDialog, so the panel stays
@@ -287,6 +322,14 @@ export function RouteReview() {
               label={t('route.tollToggle')}
             />
 
+            {/* Danger-zone (Area A) avoidance, on by default. Also recomputes the plan. */}
+            <Switch
+              className={styles.trafficToggle}
+              checked={preferences.avoidDangerZones}
+              onCheckedChange={(avoidDangerZones) => update({ avoidDangerZones })}
+              label={t('route.dangerToggle')}
+            />
+
             {/* Only offered when avoidance actually changed the outcome. */}
             {unavoidedRoute && (
               <>
@@ -325,6 +368,10 @@ export function RouteReview() {
               {route.maneuvers.map((maneuver) => {
                 const Icon = maneuverIcon(maneuver.action);
                 const zone = isZoneManeuver(maneuver.action);
+                // For a zone step, surface WHY: the city and the halachic explanation (data).
+                const zoneReason = maneuver.zone
+                  ? [maneuver.zone.city, maneuver.zone.description].filter(Boolean).join(' · ')
+                  : '';
                 return (
                   <li
                     key={maneuver.id}
@@ -333,6 +380,9 @@ export function RouteReview() {
                     <Icon size={20} className={styles.maneuverIcon} aria-hidden />
                     <span className={styles.maneuverText}>
                       {maneuverText(maneuver, t, language)}
+                      {zone && zoneReason && (
+                        <span className={styles.maneuverReason}>{zoneReason}</span>
+                      )}
                     </span>
                     {maneuver.distanceMeters > 0 && (
                       <span className={styles.maneuverDistance}>

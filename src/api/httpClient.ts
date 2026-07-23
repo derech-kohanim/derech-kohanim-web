@@ -169,6 +169,15 @@ export const httpClient: ApiClient = {
     }),
 
   zones: (stringency) => request(`/api/zones${query({ stringency })}`),
+  // Danger zones are a newer endpoint. If the server has not landed it yet, fall back to an
+  // empty collection so the rest of the app keeps working.
+  dangerZones: async () => {
+    try {
+      return await request('/api/danger-zones');
+    } catch {
+      return { type: 'FeatureCollection', features: [], version: 0 };
+    }
+  },
   providers: () => request('/api/providers'),
   computeRoute: async (body, options) => {
     const response = await request<RoutePlan | RouteResult>('/api/routes/compute', {

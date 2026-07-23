@@ -88,6 +88,12 @@ export function Settings() {
             description={t('settings.tollDescription')}
           />
           <Switch
+            checked={preferences.avoidDangerZones}
+            onCheckedChange={(avoidDangerZones) => update({ avoidDangerZones })}
+            label={t('settings.dangerZones')}
+            description={t('settings.dangerZonesDescription')}
+          />
+          <Switch
             checked={preferences.voiceEnabled}
             onCheckedChange={(voiceEnabled) => update({ voiceEnabled })}
             label={t('settings.voice')}

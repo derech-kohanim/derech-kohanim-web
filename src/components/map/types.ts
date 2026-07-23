@@ -1,6 +1,11 @@
-import type { GeoJsonLineString, LatLng, ZoneFeature } from '@dk/shared';
+import type { DangerZoneFeature, GeoJsonLineString, LatLng, ZoneFeature } from '@dk/shared';
 
 import type { RouteEvent, TrafficSegment } from '@/navigation/events';
+
+/** A tapped zone, discriminated so the info card knows which fields to read. */
+export type SelectedZone =
+  | { kind: 'stringency'; feature: ZoneFeature }
+  | { kind: 'danger'; feature: DangerZoneFeature };
 
 export interface MapCamera {
   /** Google style zoom level (13 wide, 19 close). Also scales the schematic span. */
@@ -13,6 +18,10 @@ export interface MapCamera {
 
 export interface MapCanvasProps {
   zones: ZoneFeature[];
+  /** Danger zones (Area A), drawn in their own distinct style. */
+  dangerZones?: DangerZoneFeature[];
+  /** Tapping a zone polygon reports it here, so the screen can show the info card. */
+  onZoneSelect?: (selection: SelectedZone) => void;
   origin?: LatLng | null;
   destination?: LatLng | null;
   route?: GeoJsonLineString | null;

@@ -14,7 +14,14 @@ const LAYERS: Stringency[] = ['basic', 'taharat', 'machmirim'];
  * Explains the three zone colours. On narrow viewports it collapses to a toggle so it never
  * covers the map; on wide viewports the panel stays visible and the toggle is hidden.
  */
-export function ZoneLegend({ className }: { className?: string }) {
+export function ZoneLegend({
+  className,
+  showDanger = false,
+}: {
+  className?: string;
+  /** Adds the danger-zone (Area A) row when danger zones are present on the map. */
+  showDanger?: boolean;
+}) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const panelId = useId();
@@ -50,6 +57,12 @@ export function ZoneLegend({ className }: { className?: string }) {
             {t(`map.legend.${layer}`)}
           </span>
         ))}
+        {showDanger && (
+          <span className={styles.legendRow}>
+            <span className={cn(styles.legendSwatch, styles['legendSwatch--danger'])} aria-hidden />
+            {t('map.legend.danger')}
+          </span>
+        )}
       </div>
     </div>
   );

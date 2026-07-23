@@ -506,7 +506,18 @@
 .maneuverText {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
   font-size: var(--font-size-body);
+}
+
+/* The zone reason (city + halachic why) under a zone step. */
+.maneuverReason {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  opacity: 0.85;
 }
 
 .maneuverDistance {
@@ -621,6 +632,13 @@
   color: hsl(var(--color-primary-contrast));
   font-size: var(--font-size-label);
   z-index: 10;
+}
+
+/* Zone reason strip: the city and short halachic why, glanceable under the alert banner. */
+.navThen--zone {
+  background: hsl(var(--color-danger));
+  color: hsl(var(--color-danger-contrast));
+  font-weight: var(--font-weight-medium);
 }
 
 .navMap {

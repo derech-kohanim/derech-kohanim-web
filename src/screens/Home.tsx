@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { SavedPlace } from '@dk/shared';
 import { Bookmark, Briefcase, Home as HomeIcon, Settings2, Shield, Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -7,8 +7,10 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '@/api';
 import { MapCanvas } from '@/components/map/MapCanvas';
 import { MapControls } from '@/components/map/MapControls';
+import { ZoneInfoSheet } from '@/components/map/ZoneInfoSheet';
 import { ZoneLegend } from '@/components/map/ZoneLegend';
-import type { MapCamera } from '@/components/map/types';
+import type { MapCamera, SelectedZone } from '@/components/map/types';
+import { referenceBounds, zonesNear } from '@/lib/zoneFilter';
 import { ProfileButton } from '@/components/profile/ProfileButton';
 import { DestinationSearch } from '@/components/search/DestinationSearch';
 import { IconButton, useToast } from '@/components/ui';
@@ -27,9 +29,20 @@ export function Home() {
   const navigate = useNavigate();
   const toast = useToast();
   const { preferences } = usePreferences();
-  const { origin, zones, compute, locate, locating, clear } = useTrip();
+  const { origin, zones, dangerZones, compute, locate, locating, clear } = useTrip();
   const [saved, setSaved] = useState<SavedPlace[]>([]);
   const [camera, setCamera] = useState<MapCamera>(HOME_CAMERA);
+  const [selectedZone, setSelectedZone] = useState<SelectedZone | null>(null);
+
+  // Only the zones near the planning view: with the data covering the whole country this keeps
+  // framing anchored on the current area and avoids drawing hundreds of far-away polygons.
+  const nearbyZones = useMemo(() => {
+    const bounds = referenceBounds([origin], [], 0.12);
+    return {
+      zones: zonesNear(zones?.features ?? [], bounds),
+      danger: zonesNear(dangerZones?.features ?? [], bounds),
+    };
+  }, [zones, dangerZones, origin]);
 
   // Landing on the planning screen resets any prior route, so the next compute starts clean and
   // no stale line survives a cancel -> back -> recompute.
@@ -61,8 +74,17 @@ export function Home() {
   return (
     <div className={styles.homeRoot}>
       <div className={styles.mapLayer}>
-        <MapCanvas zones={zones?.features ?? []} origin={origin} center={origin} camera={camera} />
+        <MapCanvas
+          zones={nearbyZones.zones}
+          dangerZones={nearbyZones.danger}
+          onZoneSelect={setSelectedZone}
+          origin={origin}
+          center={origin}
+          camera={camera}
+        />
       </div>
+
+      <ZoneInfoSheet selection={selectedZone} onClose={() => setSelectedZone(null)} />
 
       <div className={styles.homeOverlay}>
         <div className={styles.homeTopBar}>
@@ -92,7 +114,9 @@ export function Home() {
             showHeading={false}
             floating={false}
           />
-          {zones && zones.features.length > 0 && <ZoneLegend className={styles.homeLegend} />}
+          {(nearbyZones.zones.length > 0 || nearbyZones.danger.length > 0) && (
+            <ZoneLegend className={styles.homeLegend} showDanger={nearbyZones.danger.length > 0} />
+          )}
           {env.mock && (
             <span className={styles.mockBanner}>
               <Bookmark size={14} aria-hidden />

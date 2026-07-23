@@ -1,0 +1,81 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.layerChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+}
+
+.layerChip--basic {
+  background: hsl(var(--color-zone-basic) / 0.16);
+  color: hsl(var(--color-zone-basic));
+}
+
+.layerChip--taharat {
+  background: hsl(var(--color-zone-taharat) / 0.16);
+  color: hsl(var(--color-zone-taharat));
+}
+
+.layerChip--machmirim {
+  background: hsl(var(--color-zone-machmirim) / 0.16);
+  color: hsl(var(--color-zone-machmirim));
+}
+
+.layerChip--danger {
+  background: hsl(var(--color-zone-danger) / 0.16);
+  color: hsl(var(--color-zone-danger));
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-body);
+  color: hsl(var(--color-text));
+  text-align: start;
+}
+
+.metaIcon {
+  flex: none;
+  color: hsl(var(--color-text-muted));
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+  color: hsl(var(--color-text-muted));
+  text-align: start;
+}
+
+.description {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-relaxed);
+  color: hsl(var(--color-text));
+  text-align: start;
+}

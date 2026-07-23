@@ -135,6 +135,7 @@
     "saveTitle": "Save destination",
     "trafficToggle": "Use live traffic",
     "tollToggle": "Avoid toll roads",
+    "dangerToggle": "Avoid danger zones",
     "alternativesTitle": "Alternative routes",
     "verifiedClean": "Verified clean",
     "altFastest": "Fastest",
@@ -244,6 +245,8 @@
     "trafficDescription": "Affects which route is chosen, not only the display",
     "toll": "Avoid toll roads",
     "tollDescription": "Prefers a route without toll roads, even if slightly longer",
+    "dangerZones": "Avoid danger zones",
+    "dangerZonesDescription": "Routes around Area A, where entry is unlawful and dangerous",
     "voice": "Voice guidance",
     "voiceDescription": "Voice is the primary channel, the screen is the backup",
     "voiceId": "Voice",
@@ -279,8 +282,14 @@
     "legend": {
       "basic": "Pink: forbidden by all opinions - an absolute prohibition",
       "taharat": "Brown: the Taharat Kohanim rabbinate ruling",
-      "machmirim": "Orange: disputed area - some are stringent"
+      "machmirim": "Orange: disputed area - some are stringent",
+      "danger": "Violet: danger zone / Area A"
     }
+  },
+  "zoneInfo": {
+    "why": "Why avoid this area",
+    "dangerLayer": "Danger zone (Area A)",
+    "noDescription": "No further explanation for this area"
   },
   "errors": {
     "generic": "Something went wrong",

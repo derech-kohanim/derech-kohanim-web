@@ -1,4 +1,12 @@
-import type { LatLng, Maneuver, RoutePlan, RouteRequest, RouteResult } from '@dk/shared';
+import type {
+  LatLng,
+  ManeuverZone,
+  RoutePlan,
+  RouteRequest,
+  RouteResult,
+  Maneuver,
+  ZoneProperties,
+} from '@dk/shared';
 
 import { distanceMeters, interpolate, pathLengthMeters } from '@/lib/geo';
 
@@ -44,11 +52,22 @@ function buildGeometry(origin: LatLng, destination: LatLng, bend: number): LatLn
   return points;
 }
 
+/** Builds the ManeuverZone the server injects, carrying the reason and locality. */
+function maneuverZone(properties: ZoneProperties): ManeuverZone {
+  return {
+    name: properties.name,
+    nameHe: properties.nameHe,
+    stringency: properties.stringency,
+    description: properties.description,
+    city: properties.city,
+  };
+}
+
 function buildManeuvers(
   points: LatLng[],
   totalMeters: number,
   clean: boolean,
-  zoneName: { name: string; nameHe: string } | null,
+  zone: ManeuverZone | null,
 ): Maneuver[] {
   const count = ACTIONS.length;
   const maneuvers: Maneuver[] = [];
@@ -69,8 +88,7 @@ function buildManeuvers(
     });
   }
 
-  if (!clean && zoneName) {
-    const zone = { ...zoneName, stringency: 'basic' as const };
+  if (!clean && zone) {
     maneuvers.splice(3, 0, {
       id: 'm-zone-enter',
       instruction: '',
@@ -118,7 +136,7 @@ interface Variant {
 
 interface BuildOptions {
   clean: boolean;
-  zone: { name: string; nameHe: string } | null;
+  zone: ManeuverZone | null;
   reason?: string;
   label?: string;
 }
@@ -194,9 +212,7 @@ export function computeMockPlan(request: RouteRequest): RoutePlan {
   const originZone = zoneAt(request.origin, request.stringency);
   const endpointBlocked = Boolean(destinationZone ?? originZone);
   const zoneFeature = destinationZone ?? originZone;
-  const zone = zoneFeature
-    ? { name: zoneFeature.properties.name, nameHe: zoneFeature.properties.nameHe }
-    : null;
+  const zone = zoneFeature ? maneuverZone(zoneFeature.properties) : null;
 
   // Origin or destination sits inside a zone: no clean route exists, mirror the single
   // unverified result the server would return.
@@ -231,17 +247,14 @@ export function computeMockPlan(request: RouteRequest): RoutePlan {
 }
 
 /** The plain provider route with no avoidance: crosses the zone, never navigable. */
-function buildUnavoidedRoute(
-  request: RouteRequest,
-  zone: { name: string; nameHe: string } | null,
-): RouteResult {
+function buildUnavoidedRoute(request: RouteRequest, zone: ManeuverZone | null): RouteResult {
   const crossed =
     zone ??
     (() => {
       const hit = buildGeometry(request.origin, request.destination, 0)
         .map((point) => zoneAt(point, request.stringency))
         .find(Boolean);
-      return hit ? { name: hit.properties.name, nameHe: hit.properties.nameHe } : null;
+      return hit ? maneuverZone(hit.properties) : null;
     })();
   return buildRoute(request, { bend: 0, speedMps: 12.6, suffix: 'unavoided' }, {
     clean: false,

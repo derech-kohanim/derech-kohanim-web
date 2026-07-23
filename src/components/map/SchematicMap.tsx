@@ -1,5 +1,11 @@
 import { useMemo } from 'react';
-import type { GeoJsonLineString, LatLng, Stringency, ZoneFeature } from '@dk/shared';
+import type {
+  DangerZoneFeature,
+  GeoJsonLineString,
+  LatLng,
+  Stringency,
+  ZoneFeature,
+} from '@dk/shared';
 import { useTranslation } from 'react-i18next';
 
 import { EVENT_EMOJI, type TrafficSegment } from '@/navigation/events';
@@ -27,7 +33,7 @@ interface Bounds {
 }
 
 function collectBounds(
-  zones: ZoneFeature[],
+  zones: (ZoneFeature | DangerZoneFeature)[],
   lines: (GeoJsonLineString | null | undefined)[],
   points: (LatLng | null | undefined)[],
 ): Bounds {
@@ -97,6 +103,8 @@ function boundsAround(center: LatLng, zoom: number): Bounds {
  */
 export function SchematicMap({
   zones,
+  dangerZones = [],
+  onZoneSelect,
   origin,
   destination,
   route,
@@ -123,7 +131,7 @@ export function SchematicMap({
       following && focusPoint
         ? boundsAround(focusPoint, camera?.zoom ?? 16)
         : collectBounds(
-            zones,
+            [...zones, ...dangerZones],
             [route, naiveRoute, unavoidedRoute, ...alternativeRoutes],
             [origin, destination, vehicle],
           ),
@@ -132,6 +140,7 @@ export function SchematicMap({
       focusPoint,
       camera?.zoom,
       zones,
+      dangerZones,
       route,
       naiveRoute,
       unavoidedRoute,
@@ -197,10 +206,30 @@ export function SchematicMap({
           {zones.map((zone) => (
             <polygon
               key={zone.properties.id}
-              className={zoneClass(zone.properties.stringency)}
+              className={`${zoneClass(zone.properties.stringency)} ${
+                onZoneSelect ? styles.zoneInteractive : ''
+              }`}
               points={zone.geometry.coordinates[0]
                 .map(([lng, lat]) => `${toX(lng)},${toY(lat)}`)
                 .join(' ')}
+              onClick={
+                onZoneSelect
+                  ? () => onZoneSelect({ kind: 'stringency', feature: zone })
+                  : undefined
+              }
+            />
+          ))}
+
+          {dangerZones.map((zone) => (
+            <polygon
+              key={`danger-${zone.properties.id}`}
+              className={`${styles.zoneDanger} ${onZoneSelect ? styles.zoneInteractive : ''}`}
+              points={zone.geometry.coordinates[0]
+                .map(([lng, lat]) => `${toX(lng)},${toY(lat)}`)
+                .join(' ')}
+              onClick={
+                onZoneSelect ? () => onZoneSelect({ kind: 'danger', feature: zone }) : undefined
+              }
             />
           ))}
 

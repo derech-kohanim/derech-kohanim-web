@@ -72,6 +72,7 @@
     --color-zone-basic: 330 78% 56%;
     --color-zone-taharat: 24 46% 40%;
     --color-zone-machmirim: 30 92% 52%;
+    --color-zone-danger: 272 60% 52%;
     --color-route-naive: 218 12% 55%;
     --color-focus: 204 88% 44%;
 }
@@ -99,6 +100,7 @@
     --color-zone-basic: 330 80% 64%;
     --color-zone-taharat: 24 48% 52%;
     --color-zone-machmirim: 30 92% 60%;
+    --color-zone-danger: 272 66% 64%;
     --color-route-naive: 218 10% 58%;
     --color-focus: 202 90% 58%;
 }
@@ -127,6 +129,7 @@
     --color-zone-basic: 330 80% 64%;
     --color-zone-taharat: 24 48% 52%;
     --color-zone-machmirim: 30 92% 60%;
+    --color-zone-danger: 272 66% 64%;
     --color-route-naive: 218 10% 58%;
     --color-focus: 202 90% 58%;
   }

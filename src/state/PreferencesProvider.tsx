@@ -23,6 +23,7 @@ const DEFAULTS: UserPreferences = {
   stringency: 'taharat',
   trafficAware: true,
   avoidTolls: false,
+  avoidDangerZones: true,
   voiceEnabled: true,
   voiceId: 'he-default',
   units: 'metric',

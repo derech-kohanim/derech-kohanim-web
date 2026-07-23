@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { GeoJsonLineString, ZoneFeature } from '@dk/shared';
+import type { DangerZoneFeature, GeoJsonLineString, ZoneFeature } from '@dk/shared';
 import { APIProvider, Map, Marker, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
 
 import { env } from '@/env';
@@ -7,7 +7,7 @@ import { tokenColor } from '@/lib/tokenColor';
 import { EVENT_EMOJI, type RouteEvent, type TrafficSegment } from '@/navigation/events';
 
 import styles from './map.module.css';
-import type { MapCanvasProps } from './types';
+import type { MapCanvasProps, SelectedZone } from './types';
 
 const DEFAULT_ZOOM = 14;
 const DRIVING_ZOOM = 17;
@@ -27,7 +27,8 @@ export function GoogleMapCanvas(props: MapCanvasProps) {
           clickableIcons={!props.disablePoi}
           style={{ inlineSize: '100%', blockSize: '100%' }}
         >
-          <Zones zones={props.zones} />
+          <Zones zones={props.zones} onSelect={props.onZoneSelect} />
+          <DangerZones zones={props.dangerZones ?? []} onSelect={props.onZoneSelect} />
           <Line geometry={props.naiveRoute} colorToken="route-naive" weight={3} dashed />
           {/* Faded alternatives sit under the selected route. */}
           {(props.alternativeRoutes ?? []).map((geometry, index) => (
@@ -112,7 +113,13 @@ function Events({ events }: { events: RouteEvent[] }) {
   );
 }
 
-function Zones({ zones }: { zones: ZoneFeature[] }) {
+function Zones({
+  zones,
+  onSelect,
+}: {
+  zones: ZoneFeature[];
+  onSelect?: (selection: SelectedZone) => void;
+}) {
   const map = useMap();
   const maps = useMapsLibrary('maps');
 
@@ -121,19 +128,60 @@ function Zones({ zones }: { zones: ZoneFeature[] }) {
     const polygons = zones.map((zone) => {
       // Colour each polygon by its own stringency layer, not by the requested level.
       const color = tokenColor(`zone-${zone.properties.stringency}`);
-      return new maps.Polygon({
+      const polygon = new maps.Polygon({
         paths: zone.geometry.coordinates.map((ring) => ring.map(([lng, lat]) => ({ lat, lng }))),
         strokeColor: color,
         strokeOpacity: 0.95,
         strokeWeight: 2,
         fillColor: color,
         fillOpacity: 0.24,
-        clickable: false,
+        clickable: Boolean(onSelect),
         map,
       });
+      if (onSelect) {
+        polygon.addListener('click', () => onSelect({ kind: 'stringency', feature: zone }));
+      }
+      return polygon;
     });
     return () => polygons.forEach((polygon) => polygon.setMap(null));
-  }, [map, maps, zones]);
+  }, [map, maps, zones, onSelect]);
+
+  return null;
+}
+
+function DangerZones({
+  zones,
+  onSelect,
+}: {
+  zones: DangerZoneFeature[];
+  onSelect?: (selection: SelectedZone) => void;
+}) {
+  const map = useMap();
+  const maps = useMapsLibrary('maps');
+
+  useEffect(() => {
+    if (!map || !maps) return;
+    // Danger zones are a separate axis: their own violet token and a heavier outline so they
+    // never read as one of the three stringency layers.
+    const color = tokenColor('zone-danger');
+    const polygons = zones.map((zone) => {
+      const polygon = new maps.Polygon({
+        paths: zone.geometry.coordinates.map((ring) => ring.map(([lng, lat]) => ({ lat, lng }))),
+        strokeColor: color,
+        strokeOpacity: 1,
+        strokeWeight: 3,
+        fillColor: color,
+        fillOpacity: 0.32,
+        clickable: Boolean(onSelect),
+        map,
+      });
+      if (onSelect) {
+        polygon.addListener('click', () => onSelect({ kind: 'danger', feature: zone }));
+      }
+      return polygon;
+    });
+    return () => polygons.forEach((polygon) => polygon.setMap(null));
+  }, [map, maps, zones, onSelect]);
 
   return null;
 }

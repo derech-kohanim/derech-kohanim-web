@@ -8,7 +8,13 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import type { LatLng, RoutePlan, RouteResult, ZoneCollection } from '@dk/shared';
+import type {
+  DangerZoneCollection,
+  LatLng,
+  RoutePlan,
+  RouteResult,
+  ZoneCollection,
+} from '@dk/shared';
 
 import { api } from '@/api';
 import { currentLanguage } from '@/i18n';
@@ -49,6 +55,8 @@ interface TripApi {
   status: RouteStatus;
   errorCode: string | null;
   zones: ZoneCollection | null;
+  /** Danger zones (Area A), a separate layer from the stringency zones. */
+  dangerZones: DangerZoneCollection | null;
   compute: (destination: Destination) => Promise<RouteResult | null>;
   recompute: () => Promise<RouteResult | null>;
   /** Abort an in-flight compute and fall back to the last stable state (kept route, else idle). */
@@ -69,6 +77,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<RouteStatus>('idle');
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [zones, setZones] = useState<ZoneCollection | null>(null);
+  const [dangerZones, setDangerZones] = useState<DangerZoneCollection | null>(null);
   const inFlight = useRef<AbortController | null>(null);
 
   const routes = useMemo(() => plan?.routes ?? [], [plan]);
@@ -117,6 +126,21 @@ export function TripProvider({ children }: { children: ReactNode }) {
     };
   }, [preferences.stringency]);
 
+  // Danger zones do not depend on stringency, so they are fetched once. Failure is non-fatal:
+  // the client falls back to an empty collection.
+  useEffect(() => {
+    let cancelled = false;
+    void api
+      .dangerZones()
+      .then((collection) => {
+        if (!cancelled) setDangerZones(collection);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const runCompute = useCallback(
     async (target: Destination): Promise<RouteResult | null> => {
       inFlight.current?.abort();
@@ -135,6 +159,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
             mode: 'drive',
             trafficAware: preferences.trafficAware,
             avoidTolls: preferences.avoidTolls,
+            avoidDangerZones: preferences.avoidDangerZones,
             // Always ask; the server only fills unavoidedRoute when avoidance changed the outcome.
             includeUnavoided: true,
             language: currentLanguage(),
@@ -163,7 +188,13 @@ export function TripProvider({ children }: { children: ReactNode }) {
         return null;
       }
     },
-    [origin, preferences.stringency, preferences.trafficAware, preferences.avoidTolls],
+    [
+      origin,
+      preferences.stringency,
+      preferences.trafficAware,
+      preferences.avoidTolls,
+      preferences.avoidDangerZones,
+    ],
   );
 
   const compute = useCallback(
@@ -194,6 +225,14 @@ export function TripProvider({ children }: { children: ReactNode }) {
     avoidTollsRef.current = preferences.avoidTolls;
     if (destination) void runCompute(destination);
   }, [preferences.avoidTolls, destination, runCompute]);
+
+  // Danger-zone avoidance is likewise a routing constraint.
+  const avoidDangerRef = useRef(preferences.avoidDangerZones);
+  useEffect(() => {
+    if (avoidDangerRef.current === preferences.avoidDangerZones) return;
+    avoidDangerRef.current = preferences.avoidDangerZones;
+    if (destination) void runCompute(destination);
+  }, [preferences.avoidDangerZones, destination, runCompute]);
 
   const recompute = useCallback(
     async () => (destination ? runCompute(destination) : null),
@@ -239,6 +278,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
       status,
       errorCode,
       zones,
+      dangerZones,
       compute,
       recompute,
       cancel,
@@ -258,6 +298,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
       status,
       errorCode,
       zones,
+      dangerZones,
       compute,
       recompute,
       cancel,

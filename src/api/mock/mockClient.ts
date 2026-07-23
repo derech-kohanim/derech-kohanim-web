@@ -18,7 +18,7 @@ import { mockEventsForRoute } from '@/navigation/events';
 import { ApiClientError, type ApiClient } from '../types';
 import { CORPUS, type CorpusEntry } from './corpus';
 import { computeMockPlan } from './route';
-import { zonesFor } from './zones';
+import { dangerZonesData, zonesFor } from './zones';
 
 const STORE_KEY = 'dk.mock';
 /** Typing this word forces the error state, so it can be reviewed without breaking anything. */
@@ -36,6 +36,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   stringency: 'taharat',
   trafficAware: true,
   avoidTolls: false,
+  avoidDangerZones: true,
   voiceEnabled: true,
   voiceId: 'he-default',
   units: 'metric',
@@ -381,6 +382,11 @@ export const mockClient: ApiClient = {
   async zones(stringency) {
     await delay(160);
     return zonesFor(stringency);
+  },
+
+  async dangerZones() {
+    await delay(140);
+    return dangerZonesData();
   },
 
   async providers() {
