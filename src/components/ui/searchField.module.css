@@ -1,0 +1,60 @@
+.field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-comfortable);
+  padding-inline-start: var(--space-4);
+  padding-inline-end: var(--space-2);
+  border-radius: var(--radius-full);
+  background: hsl(var(--color-surface));
+  box-shadow: var(--elevation-md);
+  transition: box-shadow var(--duration-fast) var(--easing-standard);
+}
+
+.field:focus-within {
+  box-shadow:
+    var(--elevation-lg),
+    inset 0 0 0 2px hsl(var(--color-primary));
+}
+
+.field--large {
+  min-height: var(--space-16);
+  border-radius: var(--radius-full);
+}
+
+.leading {
+  flex: none;
+  display: flex;
+  align-items: center;
+  color: hsl(var(--color-text-muted));
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: var(--font-size-body-large);
+  font-weight: var(--font-weight-medium);
+  color: hsl(var(--color-text));
+  text-align: start;
+  padding-block: var(--space-3);
+}
+
+/* The field itself shows the focus state, so the input must not draw a second ring. */
+.input:focus-visible {
+  outline: none;
+}
+
+.input::placeholder {
+  color: hsl(var(--color-text-muted));
+  font-weight: var(--font-weight-regular);
+}
+
+.clear {
+  inline-size: var(--space-10);
+  block-size: var(--space-10);
+  border-radius: var(--radius-full);
+  color: hsl(var(--color-text-muted));
+}

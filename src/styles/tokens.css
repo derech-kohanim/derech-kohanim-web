@@ -1,0 +1,133 @@
+/* Generated from derech-kohanim-shared/src/design/tokens.ts. Do not edit. */
+
+:root {
+    --font-ui: 'Rubik', 'Segoe UI', 'Noto Sans Hebrew', system-ui, -apple-system, sans-serif;
+    --font-nav: 'Rubik', 'Segoe UI', 'Noto Sans Hebrew', system-ui, sans-serif;
+    --radius-xs: 6px;
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --radius-xl: 28px;
+    --radius-full: 999px;
+    --space-0: 0px;
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+    --space-16: 64px;
+    --font-size-caption: 12px;
+    --font-size-label: 13px;
+    --font-size-body: 15px;
+    --font-size-body-large: 17px;
+    --font-size-title: 20px;
+    --font-size-heading: 26px;
+    --font-size-display: 34px;
+    --font-size-nav-primary: 44px;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --line-height-tight: 1.2;
+    --line-height-normal: 1.45;
+    --line-height-relaxed: 1.6;
+    --elevation-none: none;
+    --elevation-sm: 0 1px 2px hsl(222 30% 10% / 0.06), 0 1px 3px hsl(222 30% 10% / 0.04);
+    --elevation-md: 0 4px 12px hsl(222 30% 10% / 0.08), 0 2px 4px hsl(222 30% 10% / 0.04);
+    --elevation-lg: 0 12px 32px hsl(222 30% 10% / 0.12), 0 4px 8px hsl(222 30% 10% / 0.05);
+    --elevation-overlay: 0 20px 48px hsl(222 30% 10% / 0.18);
+    --duration-instant: 90ms;
+    --duration-fast: 160ms;
+    --duration-normal: 240ms;
+    --duration-slow: 380ms;
+    --easing-standard: cubic-bezier(0.22, 1, 0.36, 1);
+    --easing-entrance: cubic-bezier(0.16, 1, 0.3, 1);
+    --easing-exit: cubic-bezier(0.4, 0, 1, 1);
+    --touch-min: 48px;
+    --touch-comfortable: 56px;
+
+    --color-background: 210 30% 97%;
+    --color-surface: 0 0% 100%;
+    --color-surface-muted: 210 28% 94%;
+    --color-surface-overlay: 0 0% 100%;
+    --color-border: 213 22% 88%;
+    --color-text: 222 28% 13%;
+    --color-text-muted: 216 14% 44%;
+    --color-primary: 204 88% 44%;
+    --color-primary-hover: 204 88% 38%;
+    --color-primary-contrast: 0 0% 100%;
+    --color-accent: 28 94% 55%;
+    --color-accent-contrast: 24 60% 14%;
+    --color-success: 156 58% 36%;
+    --color-success-contrast: 0 0% 100%;
+    --color-danger: 356 72% 51%;
+    --color-danger-contrast: 0 0% 100%;
+    --color-warning: 38 94% 50%;
+    --color-warning-contrast: 30 60% 14%;
+    --color-zone: 356 72% 51%;
+    --color-zone-basic: 330 78% 56%;
+    --color-zone-taharat: 24 46% 40%;
+    --color-zone-machmirim: 30 92% 52%;
+    --color-route-naive: 218 12% 55%;
+    --color-focus: 204 88% 44%;
+}
+
+:root[data-theme='dark'] {
+    --color-background: 222 30% 8%;
+    --color-surface: 222 24% 12%;
+    --color-surface-muted: 222 20% 17%;
+    --color-surface-overlay: 222 24% 14%;
+    --color-border: 220 16% 24%;
+    --color-text: 210 30% 96%;
+    --color-text-muted: 215 15% 66%;
+    --color-primary: 202 90% 58%;
+    --color-primary-hover: 202 90% 66%;
+    --color-primary-contrast: 222 40% 10%;
+    --color-accent: 30 96% 62%;
+    --color-accent-contrast: 24 60% 12%;
+    --color-success: 156 52% 48%;
+    --color-success-contrast: 222 40% 10%;
+    --color-danger: 356 76% 62%;
+    --color-danger-contrast: 222 40% 10%;
+    --color-warning: 40 94% 60%;
+    --color-warning-contrast: 30 60% 12%;
+    --color-zone: 356 76% 60%;
+    --color-zone-basic: 330 80% 64%;
+    --color-zone-taharat: 24 48% 52%;
+    --color-zone-machmirim: 30 92% 60%;
+    --color-route-naive: 218 10% 58%;
+    --color-focus: 202 90% 58%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-background: 222 30% 8%;
+    --color-surface: 222 24% 12%;
+    --color-surface-muted: 222 20% 17%;
+    --color-surface-overlay: 222 24% 14%;
+    --color-border: 220 16% 24%;
+    --color-text: 210 30% 96%;
+    --color-text-muted: 215 15% 66%;
+    --color-primary: 202 90% 58%;
+    --color-primary-hover: 202 90% 66%;
+    --color-primary-contrast: 222 40% 10%;
+    --color-accent: 30 96% 62%;
+    --color-accent-contrast: 24 60% 12%;
+    --color-success: 156 52% 48%;
+    --color-success-contrast: 222 40% 10%;
+    --color-danger: 356 76% 62%;
+    --color-danger-contrast: 222 40% 10%;
+    --color-warning: 40 94% 60%;
+    --color-warning-contrast: 30 60% 12%;
+    --color-zone: 356 76% 60%;
+    --color-zone-basic: 330 80% 64%;
+    --color-zone-taharat: 24 48% 52%;
+    --color-zone-machmirim: 30 92% 60%;
+    --color-route-naive: 218 10% 58%;
+    --color-focus: 202 90% 58%;
+  }
+}

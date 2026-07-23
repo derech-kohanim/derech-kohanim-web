@@ -1,0 +1,185 @@
+.root {
+  position: relative;
+  width: 100%;
+}
+
+.panel {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: calc(100% + var(--space-2));
+  z-index: 30;
+  max-height: min(60vh, 460px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  background: hsl(var(--color-surface-overlay));
+  box-shadow: var(--elevation-overlay);
+  animation: panelIn var(--duration-fast) var(--easing-entrance);
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--space-2) * -1));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.shortcuts {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-2) var(--space-1);
+}
+
+.shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-height: var(--touch-min);
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-full);
+  background: hsl(var(--color-primary) / 0.12);
+  color: hsl(var(--color-primary));
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  justify-content: center;
+  transition: background-color var(--duration-fast) var(--easing-standard);
+}
+
+.shortcut:hover {
+  background: hsl(var(--color-primary) / 0.2);
+}
+
+.sectionLabel {
+  display: block;
+  padding: var(--space-3) var(--space-3) var(--space-1);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  color: hsl(var(--color-text-muted));
+  text-align: start;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--touch-comfortable);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  text-align: start;
+  cursor: pointer;
+  transition: background-color var(--duration-instant) var(--easing-standard);
+}
+
+.row:hover {
+  background: hsl(var(--color-surface-muted));
+}
+
+/* The active row is driven by the keyboard, so it must be obvious without a real focus ring. */
+.row[data-active='true'] {
+  background: hsl(var(--color-primary) / 0.12);
+  box-shadow: inset 0 0 0 2px hsl(var(--color-primary));
+}
+
+.icon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--space-10);
+  block-size: var(--space-10);
+  border-radius: var(--radius-md);
+  background: hsl(var(--color-surface-muted));
+  color: hsl(var(--color-text-muted));
+}
+
+.icon--saved {
+  background: hsl(var(--color-primary) / 0.14);
+  color: hsl(var(--color-primary));
+}
+
+.icon--coordinates {
+  background: hsl(var(--color-accent) / 0.18);
+  color: hsl(var(--color-accent));
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.title {
+  font-size: var(--font-size-body-large);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: hsl(var(--color-text));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subtitle {
+  font-size: var(--font-size-label);
+  color: hsl(var(--color-text-muted));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mark {
+  background: none;
+  color: hsl(var(--color-primary));
+  font-weight: var(--font-weight-bold);
+}
+
+.distance {
+  flex: none;
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--color-text-muted));
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.stateTitle {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+}
+
+.stateHint {
+  font-size: var(--font-size-label);
+  color: hsl(var(--color-text-muted));
+}
+
+.skeletonRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  min-height: var(--touch-comfortable);
+}
+
+.skeletonText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}

@@ -1,0 +1,37 @@
+.avatarButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--touch-comfortable);
+  block-size: var(--touch-comfortable);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: hsl(var(--color-surface-overlay));
+  box-shadow: var(--elevation-md);
+  flex: none;
+  transition: transform var(--duration-instant) var(--easing-standard);
+}
+
+.avatarButton:active {
+  transform: scale(0.94);
+}
+
+.avatarImg {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatarInitials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 100%;
+  block-size: 100%;
+  background: hsl(var(--color-primary));
+  color: hsl(var(--color-primary-contrast));
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.02em;
+}
