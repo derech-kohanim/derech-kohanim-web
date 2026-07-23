@@ -100,6 +100,8 @@ export function SchematicMap({
   origin,
   destination,
   route,
+  alternativeRoutes = [],
+  unavoidedRoute,
   naiveRoute,
   vehicle,
   vehicleHeading,
@@ -120,8 +122,24 @@ export function SchematicMap({
     () =>
       following && focusPoint
         ? boundsAround(focusPoint, camera?.zoom ?? 16)
-        : collectBounds(zones, [route, naiveRoute], [origin, destination, vehicle]),
-    [following, focusPoint, camera?.zoom, zones, route, naiveRoute, origin, destination, vehicle],
+        : collectBounds(
+            zones,
+            [route, naiveRoute, unavoidedRoute, ...alternativeRoutes],
+            [origin, destination, vehicle],
+          ),
+    [
+      following,
+      focusPoint,
+      camera?.zoom,
+      zones,
+      route,
+      naiveRoute,
+      unavoidedRoute,
+      alternativeRoutes,
+      origin,
+      destination,
+      vehicle,
+    ],
   );
 
   const toX = (lng: number) => ((lng - bounds.minLng) / (bounds.maxLng - bounds.minLng)) * WIDTH;
@@ -187,6 +205,14 @@ export function SchematicMap({
           ))}
 
           {naiveRoute && <path className={styles.routeNaive} d={pathOf(naiveRoute)} />}
+          {alternativeRoutes.map((geometry, index) =>
+            geometry ? (
+              <path key={`alt-${index}`} className={styles.routeAlt} d={pathOf(geometry)} />
+            ) : null,
+          )}
+          {unavoidedRoute && (
+            <path className={styles.routeUnavoided} d={pathOf(unavoidedRoute)} />
+          )}
           {route && (
             <>
               <path className={styles.routeCasing} d={pathOf(route)} />

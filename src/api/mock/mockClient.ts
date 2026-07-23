@@ -35,6 +35,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   theme: 'system',
   stringency: 'taharat',
   trafficAware: true,
+  avoidTolls: false,
   voiceEnabled: true,
   voiceId: 'he-default',
   units: 'metric',

@@ -17,38 +17,28 @@ import { useAuth } from '@/state/AuthProvider';
 
 const STORAGE_KEY = 'dk.preferences';
 
-/**
- * Local superset of the shared UserPreferences. `avoidTolls` is not yet part of the shared
- * contract, so it lives here and is persisted client-side (localStorage, and echoed to the
- * account like the other fields - the server ignores what it does not know).
- */
-export interface AppPreferences extends UserPreferences {
-  /** Avoid toll roads. Sent as RouteRequest.avoidTolls. */
-  avoidTolls: boolean;
-}
-
-const DEFAULTS: AppPreferences = {
+const DEFAULTS: UserPreferences = {
   language: 'he',
   theme: 'system',
   stringency: 'taharat',
   trafficAware: true,
+  avoidTolls: false,
   voiceEnabled: true,
   voiceId: 'he-default',
   units: 'metric',
-  avoidTolls: false,
 };
 
 interface PreferencesApi {
-  preferences: AppPreferences;
-  update: (patch: Partial<AppPreferences>) => void;
+  preferences: UserPreferences;
+  update: (patch: Partial<UserPreferences>) => void;
 }
 
 const PreferencesContext = createContext<PreferencesApi | null>(null);
 
-function load(): AppPreferences {
+function load(): UserPreferences {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<AppPreferences>) };
+    if (raw) return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<UserPreferences>) };
   } catch {
     /* fall back to the defaults */
   }
@@ -58,7 +48,7 @@ function load(): AppPreferences {
 export function PreferencesProvider({ children }: { children: ReactNode }) {
   const { i18n } = useTranslation();
   const { user } = useAuth();
-  const [preferences, setPreferences] = useState<AppPreferences>(load);
+  const [preferences, setPreferences] = useState<UserPreferences>(load);
   const hydratedFor = useRef<string | null>(null);
   const lastSynced = useRef<string>('');
 
@@ -98,7 +88,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     if (i18n.language !== preferences.language) void i18n.changeLanguage(preferences.language);
   }, [i18n, preferences.language]);
 
-  const update = useCallback((patch: Partial<AppPreferences>) => {
+  const update = useCallback((patch: Partial<UserPreferences>) => {
     setPreferences((current) => ({ ...current, ...patch }));
   }, []);
 

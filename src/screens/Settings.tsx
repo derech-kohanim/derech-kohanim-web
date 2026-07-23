@@ -82,6 +82,12 @@ export function Settings() {
             description={t('settings.trafficDescription')}
           />
           <Switch
+            checked={preferences.avoidTolls}
+            onCheckedChange={(avoidTolls) => update({ avoidTolls })}
+            label={t('settings.toll')}
+            description={t('settings.tollDescription')}
+          />
+          <Switch
             checked={preferences.voiceEnabled}
             onCheckedChange={(voiceEnabled) => update({ voiceEnabled })}
             label={t('settings.voice')}

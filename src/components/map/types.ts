@@ -16,6 +16,13 @@ export interface MapCanvasProps {
   origin?: LatLng | null;
   destination?: LatLng | null;
   route?: GeoJsonLineString | null;
+  /** Unselected alternatives, drawn faded/secondary beneath the selected route. */
+  alternativeRoutes?: (GeoJsonLineString | null | undefined)[];
+  /**
+   * User-facing comparison: the plain route with no zone avoidance, drawn in a warning style.
+   * Distinct from `naiveRoute`, which is the debug overlay.
+   */
+  unavoidedRoute?: GeoJsonLineString | null;
   /** Debug only: the route a provider returns with no avoidance. */
   naiveRoute?: GeoJsonLineString | null;
   vehicle?: LatLng | null;

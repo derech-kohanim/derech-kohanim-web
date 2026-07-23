@@ -29,6 +29,18 @@ export function GoogleMapCanvas(props: MapCanvasProps) {
         >
           <Zones zones={props.zones} />
           <Line geometry={props.naiveRoute} colorToken="route-naive" weight={3} dashed />
+          {/* Faded alternatives sit under the selected route. */}
+          {(props.alternativeRoutes ?? []).map((geometry, index) => (
+            <Line
+              key={index}
+              geometry={geometry}
+              colorToken="text-muted"
+              weight={5}
+              opacity={0.55}
+            />
+          ))}
+          {/* The unavoided comparison route: a clear warning style, never the selected one. */}
+          <Line geometry={props.unavoidedRoute} colorToken="warning" weight={5} dashed />
           <Line
             geometry={props.route}
             colorToken={props.verifiedClean === false ? 'danger' : 'primary'}
@@ -131,11 +143,13 @@ function Line({
   colorToken,
   weight,
   dashed = false,
+  opacity = 0.95,
 }: {
   geometry: GeoJsonLineString | null | undefined;
   colorToken: string;
   weight: number;
   dashed?: boolean;
+  opacity?: number;
 }) {
   const map = useMap();
   const maps = useMapsLibrary('maps');
@@ -147,7 +161,7 @@ function Line({
       path: geometry.coordinates.map(([lng, lat]) => ({ lat, lng })),
       strokeColor: color,
       strokeWeight: dashed ? 0 : weight,
-      strokeOpacity: dashed ? 0 : 0.95,
+      strokeOpacity: dashed ? 0 : opacity,
       icons: dashed
         ? [
             {
@@ -161,7 +175,7 @@ function Line({
       map,
     });
     return () => polyline.setMap(null);
-  }, [map, maps, geometry, colorToken, weight, dashed]);
+  }, [map, maps, geometry, colorToken, weight, dashed, opacity]);
 
   return null;
 }

@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import type { LatLng, RouteResult, ZoneCollection } from '@dk/shared';
+import type { LatLng, RoutePlan, RouteResult, ZoneCollection } from '@dk/shared';
 
 import { api } from '@/api';
 import { currentLanguage } from '@/i18n';
@@ -36,7 +36,16 @@ interface TripApi {
   locate: () => Promise<LatLng | null>;
   destination: Destination | null;
   setDestination: (destination: Destination | null) => void;
+  /** The selected route: the one drawn highlighted and started for navigation. */
   route: RouteResult | null;
+  /** Every zone-verified alternative the server returned, best first. */
+  routes: RouteResult[];
+  /** Id of the selected route within `routes`. */
+  selectedRouteId: string | null;
+  /** Pick one of the alternatives as the active route. */
+  selectRoute: (routeId: string) => void;
+  /** Plain provider route with no avoidance, present only for comparison. Never navigable. */
+  unavoidedRoute: RouteResult | null;
   status: RouteStatus;
   errorCode: string | null;
   zones: ZoneCollection | null;
@@ -55,11 +64,19 @@ export function TripProvider({ children }: { children: ReactNode }) {
   const [locationGranted, setLocationGranted] = useState(false);
   const [locating, setLocating] = useState(false);
   const [destination, setDestination] = useState<Destination | null>(null);
-  const [route, setRoute] = useState<RouteResult | null>(null);
+  const [plan, setPlan] = useState<RoutePlan | null>(null);
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const [status, setStatus] = useState<RouteStatus>('idle');
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [zones, setZones] = useState<ZoneCollection | null>(null);
   const inFlight = useRef<AbortController | null>(null);
+
+  const routes = useMemo(() => plan?.routes ?? [], [plan]);
+  const route = useMemo(
+    () => routes.find((candidate) => candidate.id === selectedRouteId) ?? routes[0] ?? null,
+    [routes, selectedRouteId],
+  );
+  const unavoidedRoute = plan?.unavoidedRoute ?? null;
 
   const locate = useCallback((): Promise<LatLng | null> => {
     if (!navigator.geolocation) return Promise.resolve(null);
@@ -117,23 +134,36 @@ export function TripProvider({ children }: { children: ReactNode }) {
             stringency: preferences.stringency,
             mode: 'drive',
             trafficAware: preferences.trafficAware,
+            avoidTolls: preferences.avoidTolls,
+            // Always ask; the server only fills unavoidedRoute when avoidance changed the outcome.
+            includeUnavoided: true,
             language: currentLanguage(),
           },
           { signal: controller.signal },
         );
         if (controller.signal.aborted) return null;
-        setRoute(result);
+        if (result.routes.length === 0) {
+          setPlan(null);
+          setSelectedRouteId(null);
+          setStatus('error');
+          setErrorCode('avoidance_failed');
+          return null;
+        }
+        setPlan(result);
+        // A fresh compute always defaults to the best route.
+        setSelectedRouteId(result.routes[0].id);
         setStatus('ready');
-        return result;
+        return result.routes[0];
       } catch (cause) {
         if (controller.signal.aborted || (cause as Error).name === 'AbortError') return null;
-        setRoute(null);
+        setPlan(null);
+        setSelectedRouteId(null);
         setStatus('error');
         setErrorCode((cause as { code?: string }).code ?? 'generic');
         return null;
       }
     },
-    [origin, preferences.stringency, preferences.trafficAware],
+    [origin, preferences.stringency, preferences.trafficAware, preferences.avoidTolls],
   );
 
   const compute = useCallback(
@@ -144,6 +174,10 @@ export function TripProvider({ children }: { children: ReactNode }) {
     [runCompute],
   );
 
+  const selectRoute = useCallback((routeId: string) => {
+    setSelectedRouteId(routeId);
+  }, []);
+
   // Travel time is priced by the server (Google in the hybrid engine). When the traffic
   // toggle flips, re-fetch so the displayed ETA is the server's number, not a stale one.
   const trafficRef = useRef(preferences.trafficAware);
@@ -153,6 +187,14 @@ export function TripProvider({ children }: { children: ReactNode }) {
     if (destination) void runCompute(destination);
   }, [preferences.trafficAware, destination, runCompute]);
 
+  // Toll avoidance is a routing constraint, so flipping it recomputes the whole plan.
+  const avoidTollsRef = useRef(preferences.avoidTolls);
+  useEffect(() => {
+    if (avoidTollsRef.current === preferences.avoidTolls) return;
+    avoidTollsRef.current = preferences.avoidTolls;
+    if (destination) void runCompute(destination);
+  }, [preferences.avoidTolls, destination, runCompute]);
+
   const recompute = useCallback(
     async () => (destination ? runCompute(destination) : null),
     [destination, runCompute],
@@ -161,21 +203,22 @@ export function TripProvider({ children }: { children: ReactNode }) {
   const cancel = useCallback(() => {
     inFlight.current?.abort();
     inFlight.current = null;
-    // A recompute over an existing route just keeps that route; a first compute has nothing to
-    // fall back to, so we return to a clean planning state with no destination and no error.
-    if (route) {
+    // A recompute over an existing plan just keeps it; a first compute has nothing to fall back
+    // to, so we return to a clean planning state with no destination and no error.
+    if (routes.length > 0) {
       setStatus('ready');
     } else {
       setDestination(null);
       setStatus('idle');
     }
     setErrorCode(null);
-  }, [route]);
+  }, [routes.length]);
 
   const clear = useCallback(() => {
     inFlight.current?.abort();
     setDestination(null);
-    setRoute(null);
+    setPlan(null);
+    setSelectedRouteId(null);
     setStatus('idle');
     setErrorCode(null);
   }, []);
@@ -189,6 +232,10 @@ export function TripProvider({ children }: { children: ReactNode }) {
       destination,
       setDestination,
       route,
+      routes,
+      selectedRouteId,
+      selectRoute,
+      unavoidedRoute,
       status,
       errorCode,
       zones,
@@ -204,6 +251,10 @@ export function TripProvider({ children }: { children: ReactNode }) {
       locate,
       destination,
       route,
+      routes,
+      selectedRouteId,
+      selectRoute,
+      unavoidedRoute,
       status,
       errorCode,
       zones,
