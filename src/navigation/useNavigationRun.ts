@@ -72,6 +72,8 @@ export function useNavigationRun(
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState(4);
   const [gpsSpeed, setGpsSpeed] = useState(0);
+  const [gpsHeading, setGpsHeading] = useState<number | null>(null);
+  const lastGpsPoint = useRef<LatLng | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [report, setReport] = useState<NavigationProgressResponse | null>(null);
   const [status, setStatus] = useState<NavigationStatus>('idle');
@@ -134,6 +136,15 @@ export function useNavigationRun(
         if (typeof position.coords.speed === 'number' && position.coords.speed >= 0) {
           setGpsSpeed(position.coords.speed);
         }
+        // Prefer the heading the device reports; when the feed omits it (NaN when stationary
+        // or on devices without a compass) derive it from the movement between fixes.
+        const feedHeading = position.coords.heading;
+        if (typeof feedHeading === 'number' && !Number.isNaN(feedHeading)) {
+          setGpsHeading(feedHeading);
+        } else if (lastGpsPoint.current && distanceMeters(lastGpsPoint.current, here) >= 3) {
+          setGpsHeading(bearingDegrees(lastGpsPoint.current, here));
+        }
+        lastGpsPoint.current = here;
       },
       () => undefined,
       { enableHighAccuracy: true },
@@ -151,12 +162,16 @@ export function useNavigationRun(
     return interpolate(points[previous], points[Math.min(index, points.length - 1)], ratio);
   }, [points, cumulative, travelled]);
 
-  const heading = useMemo(() => {
+  // Heading along the route, used directly when simulating and as the fallback for real driving
+  // before the device has reported a usable bearing.
+  const routeHeading = useMemo(() => {
     if (points.length < 2 || !position) return 0;
     let index = 1;
     while (index < cumulative.length && cumulative[index] < travelled) index += 1;
     return bearingDegrees(position, points[Math.min(index, points.length - 1)]);
   }, [points, cumulative, travelled, position]);
+
+  const heading = simulated ? routeHeading : gpsHeading ?? routeHeading;
 
   useEffect(() => {
     if (!sessionId || !position) return;

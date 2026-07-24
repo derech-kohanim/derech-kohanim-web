@@ -1,4 +1,4 @@
-import type { LatLng, RouteEvent, RouteEventBundle, RouteEventType, TrafficSegment } from '@dk/shared';
+import type { LatLng, RouteEvent, RouteEventBundle, RouteEventType } from '@dk/shared';
 
 import { distanceMeters, toLatLngs } from '@/lib/geo';
 
@@ -27,17 +27,13 @@ function cumulative(points: LatLng[]): number[] {
 
 /**
  * Fallback event bundle, generated on the client when the server events endpoint is
- * unreachable, so navigation never loses its zone markers and congestion overlay. Deterministic
- * per route. Zone events come from the manoeuvres the server already injected.
+ * unreachable, so navigation never loses its zone markers. Deterministic per route. Zone
+ * events come from the manoeuvres the server already injected; no traffic, police, hazard or
+ * other incidents are fabricated here - those only ever come from real reports via the API.
  */
 export function mockEventsForRoute(route: { geometry: RouteEventGeometry; maneuvers: RouteEventManeuver[] }): RouteEventBundle {
   const points = toLatLngs(route.geometry.coordinates);
   const totals = cumulative(points);
-  const total = totals[totals.length - 1] ?? 0;
-  const at = (fraction: number) => {
-    const index = Math.min(points.length - 1, Math.round(fraction * (points.length - 1)));
-    return { point: points[index], index, distance: totals[index] };
-  };
 
   const events: RouteEvent[] = [];
 
@@ -54,43 +50,7 @@ export function mockEventsForRoute(route: { geometry: RouteEventGeometry; maneuv
     }
   }
 
-  const police = at(0.28);
-  events.push({
-    id: 'seed-police',
-    type: 'police',
-    location: police.point,
-    routeDistanceMeters: police.distance,
-  });
-  const hazard = at(0.7);
-  events.push({
-    id: 'seed-hazard',
-    type: 'hazard',
-    location: hazard.point,
-    routeDistanceMeters: hazard.distance,
-  });
-
-  const heavyFrom = Math.round(points.length * 0.34);
-  const heavyTo = Math.round(points.length * 0.46);
-  const moderateFrom = Math.round(points.length * 0.6);
-  const moderateTo = Math.round(points.length * 0.72);
-  const traffic: TrafficSegment[] = [
-    { fromIndex: heavyFrom, toIndex: heavyTo, level: 'heavy' },
-    { fromIndex: moderateFrom, toIndex: moderateTo, level: 'moderate' },
-  ];
-
-  const jam = at(0.4);
-  events.push({
-    id: 'seed-traffic',
-    type: 'traffic',
-    location: jam.point,
-    routeDistanceMeters: jam.distance,
-  });
-
-  const heavyMeters = (totals[heavyTo] ?? total) - (totals[heavyFrom] ?? 0);
-  const moderateMeters = (totals[moderateTo] ?? total) - (totals[moderateFrom] ?? 0);
-  const delaySeconds = Math.round(heavyMeters * 0.09 + moderateMeters * 0.04);
-
-  return { routeId: 'local', events, traffic, delaySeconds };
+  return { routeId: 'local', events, traffic: [], delaySeconds: 0 };
 }
 
 interface RouteEventGeometry {

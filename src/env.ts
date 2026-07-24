@@ -6,5 +6,7 @@ export const env = {
   mock: flag(import.meta.env.VITE_MOCK, false),
   apiBase: import.meta.env.VITE_API_BASE ?? '',
   googleMapsKey: import.meta.env.VITE_GOOGLE_MAPS_KEY ?? '',
+  /** A vector Map ID is required for the map to rotate heading-up while driving. */
+  googleMapsId: import.meta.env.VITE_GOOGLE_MAPS_ID ?? '',
   googleClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '',
 };

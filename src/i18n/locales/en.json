@@ -130,7 +130,7 @@
     "failedOptionStringency": "Change the stringency level",
     "failedOptionProceed": "Drive knowingly, at your own responsibility",
     "proceedAnyway": "Show only, no live navigation",
-    "computing": "Computing route...",
+    "computing": "Computing route",
     "error": "Route computation failed",
     "saveTitle": "Save destination",
     "trafficToggle": "Use live traffic",

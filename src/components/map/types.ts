@@ -44,8 +44,10 @@ export interface MapCanvasProps {
   /** Suppress base-map POI clicks. Set while driving so a tap cannot open a details card. */
   disablePoi?: boolean;
   camera?: MapCamera;
+  /** Lets the map hand camera changes back, e.g. dropping follow when the driver pans. */
+  onCameraChange?: (patch: Partial<MapCamera>) => void;
   traffic?: TrafficSegment[];
   events?: RouteEvent[];
 }
 
-export const DEFAULT_CAMERA: MapCamera = { zoom: 16, headingUp: true, follow: true };
+export const DEFAULT_CAMERA: MapCamera = { zoom: 17, headingUp: true, follow: true };

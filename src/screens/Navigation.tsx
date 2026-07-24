@@ -211,6 +211,7 @@ export function Navigation() {
           focusOnVehicle
           disablePoi
           camera={camera}
+          onCameraChange={patchCamera}
           traffic={bundle?.traffic ?? []}
           events={events}
         />

@@ -19,6 +19,9 @@ export function GoogleMapCanvas(props: MapCanvasProps) {
     <div className={styles.canvas}>
       <APIProvider apiKey={env.googleMapsKey}>
         <Map
+          // A vector Map ID lets the map rotate to the heading while driving; without one Google
+          // renders a raster map that stays north-up.
+          mapId={env.googleMapsId || undefined}
           defaultCenter={centre}
           defaultZoom={props.focusOnVehicle ? DRIVING_ZOOM : props.camera?.zoom ?? DEFAULT_ZOOM}
           gestureHandling="greedy"
@@ -265,11 +268,20 @@ function Camera({
   focusOnVehicle,
   center,
   camera,
+  onCameraChange,
 }: MapCanvasProps) {
   const map = useMap();
   const core = useMapsLibrary('core');
   const focusPoint = focusOnVehicle ? vehicle : center;
   const following = Boolean(camera) && (camera?.follow ?? true) && Boolean(focusPoint);
+
+  // Best effort: when the driver drags the map, stop following so the camera does not fight
+  // them. Recentre (or the overview toggle) turns following back on.
+  useEffect(() => {
+    if (!map || !onCameraChange) return;
+    const listener = map.addListener('dragstart', () => onCameraChange({ follow: false }));
+    return () => listener.remove();
+  }, [map, onCameraChange]);
 
   useEffect(() => {
     if (!map || !core || following) return;
