@@ -131,6 +131,7 @@
     "failedOptionProceed": "Drive knowingly, at your own responsibility",
     "proceedAnyway": "Show only, no live navigation",
     "computing": "Computing route",
+    "computingTo": "Computing route to {{name}}",
     "error": "Route computation failed",
     "saveTitle": "Save destination",
     "trafficToggle": "Use live traffic",

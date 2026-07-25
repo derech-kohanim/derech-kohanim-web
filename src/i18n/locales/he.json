@@ -131,6 +131,7 @@
     "failedOptionProceed": "לנסוע ביודעין, באחריות הנוסע",
     "proceedAnyway": "הצגה בלבד, ללא ניווט חי",
     "computing": "מחשב מסלול",
+    "computingTo": "מחשב מסלול אל {{name}}",
     "error": "חישוב המסלול נכשל",
     "saveTitle": "שמירת היעד",
     "trafficToggle": "התחשבות בתנועה בזמן אמת",

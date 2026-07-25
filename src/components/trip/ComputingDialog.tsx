@@ -16,7 +16,13 @@ import styles from './computingDialog.module.css';
 export function ComputingDialog() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { status, route, cancel } = useTrip();
+  const { status, route, destination, cancel } = useTrip();
+
+  // Name the destination in the title when one is known, so the wait reads as purposeful.
+  const destinationName = destination?.title?.trim();
+  const title = destinationName
+    ? t('route.computingTo', { name: destinationName })
+    : t('route.computing');
 
   const onCancel = useCallback(() => {
     // No route yet means this was a first compute: return to the planning screen cleanly.
@@ -29,7 +35,7 @@ export function ComputingDialog() {
     <Dialog
       open={status === 'computing'}
       onClose={onCancel}
-      title={t('route.computing')}
+      title={title}
       busy
       actions={
         <Button variant="outline" onClick={onCancel}>
