@@ -1,6 +1,7 @@
 import type { Language, VoiceClip } from '@dk/shared';
 
 import { api } from '@/api';
+import type { CachedVoiceClip } from '@/lib/offlineCache';
 
 import type { AssembledPhrase } from './phrase';
 
@@ -60,14 +61,39 @@ export class VoiceEngine {
 
   /** Must be called from a user gesture, which is what unlocks audio in the browser. */
   unlock(): void {
-    if (this.context) {
-      void this.context.resume();
-      return;
-    }
+    const context = this.ensureContext();
+    if (context) void context.resume();
+  }
+
+  /**
+   * Returns an AudioContext, creating a suspended one on demand. Decoding audio does not need a
+   * user gesture, so this lets clips be fetched and decoded while the driver is still parked; the
+   * later `unlock()` from the start gesture only has to resume it.
+   */
+  private ensureContext(): AudioContext | null {
+    if (this.context) return this.context;
     try {
       this.context = new AudioContext();
     } catch {
       this.context = null;
+    }
+    return this.context;
+  }
+
+  /**
+   * Decodes clip bytes into a playable buffer. Decodes a copy of the bytes because
+   * `decodeAudioData` detaches the ArrayBuffer it is given, and callers keep the original for
+   * the offline cache. Returns whether the key is now available.
+   */
+  private async decodeInto(key: string, bytes: ArrayBuffer): Promise<boolean> {
+    const context = this.ensureContext();
+    if (!context) return false;
+    if (this.buffers.has(key)) return true;
+    try {
+      this.buffers.set(key, await context.decodeAudioData(bytes.slice(0)));
+      return true;
+    } catch {
+      return false;
     }
   }
 
@@ -78,26 +104,47 @@ export class VoiceEngine {
 
   /** Fetches every clip the route will need, while the driver is still parked. */
   async preload(keys: string[], language: Language, voiceId: string): Promise<void> {
-    if (keys.length === 0) return;
+    await this.prepare(keys, language, voiceId);
+  }
+
+  /**
+   * Resolves and downloads every clip the route needs, decodes each into a playable buffer, and
+   * returns the raw bytes so the caller can persist them for offline restore. Awaiting this is
+   * what turns the old fire-and-forget preload into an observable "voice ready" step. A clip that
+   * fails to resolve, download, or decode is simply omitted; the fallback ladder covers it.
+   */
+  async prepare(keys: string[], language: Language, voiceId: string): Promise<CachedVoiceClip[]> {
+    if (keys.length === 0) return [];
     let clips: VoiceClip[] = [];
     try {
       const response = await api.resolveVoiceClips({ language, voiceId, keys });
       clips = response.clips;
     } catch {
-      return;
+      return [];
     }
-    await Promise.all(clips.map((clip) => this.load(clip)));
+    const collected: CachedVoiceClip[] = [];
+    await Promise.all(
+      clips.map(async (clip) => {
+        if (this.buffers.has(clip.key)) return;
+        try {
+          const response = await fetch(clip.url);
+          const bytes = await response.arrayBuffer();
+          const mime = response.headers.get('content-type') ?? 'audio/mpeg';
+          if (await this.decodeInto(clip.key, bytes)) {
+            collected.push({ key: clip.key, mime, bytes });
+          }
+        } catch {
+          /* the fallback ladder takes it from here */
+        }
+      }),
+    );
+    return collected;
   }
 
-  private async load(clip: VoiceClip): Promise<void> {
-    if (!this.context || this.buffers.has(clip.key)) return;
-    try {
-      const response = await fetch(clip.url);
-      const bytes = await response.arrayBuffer();
-      this.buffers.set(clip.key, await this.context.decodeAudioData(bytes));
-    } catch {
-      /* the fallback ladder takes it from here */
-    }
+  /** Restores clips from the offline cache after a reload, with no network access. */
+  async loadCachedClips(clips: CachedVoiceClip[]): Promise<void> {
+    if (clips.length === 0) return;
+    await Promise.all(clips.map((clip) => this.decodeInto(clip.key, clip.bytes)));
   }
 
   /** For logging and verification: what the assembler produced for this announcement. */

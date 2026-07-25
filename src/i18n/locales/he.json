@@ -302,6 +302,13 @@
     "destination_inside_zone": "היעד נמצא בתוך אזור אסור",
     "avoidance_failed": "לא הצלחנו למצוא מסלול שנמנע מכל האזורים"
   },
+  "status": {
+    "noInternet": "אין חיבור לאינטרנט",
+    "noGps": "אין קליטת GPS"
+  },
+  "offline": {
+    "ready": "מוכן לנסיעה גם ללא רשת"
+  },
   "profile": {
     "menuTitle": "החשבון שלי",
     "openMenu": "החשבון והפרופיל",

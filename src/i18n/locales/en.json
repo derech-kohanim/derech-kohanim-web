@@ -302,6 +302,13 @@
     "destination_inside_zone": "The destination is inside a forbidden zone",
     "avoidance_failed": "We could not find a route that avoids every zone"
   },
+  "status": {
+    "noInternet": "No internet",
+    "noGps": "No GPS"
+  },
+  "offline": {
+    "ready": "Ready for offline driving"
+  },
   "profile": {
     "menuTitle": "My account",
     "openMenu": "Account and profile",

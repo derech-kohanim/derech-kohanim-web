@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PlaceCategory } from '@dk/shared';
 import {
   AlertTriangle,
   Briefcase,
+  CheckCircle2,
   Clock,
   Home as HomeIcon,
   MapPin,
@@ -27,6 +28,7 @@ import { currentLanguage } from '@/i18n';
 import { formatArrival, formatDistance, formatDuration } from '@/lib/format';
 import { isZoneManeuver, maneuverIcon, maneuverText } from '@/lib/maneuver';
 import { referenceBounds, zonesNear } from '@/lib/zoneFilter';
+import { useNavPrep } from '@/navigation/useNavPrep';
 import { usePreferences } from '@/state/PreferencesProvider';
 import { useTrip } from '@/state/TripProvider';
 import { useRequireAccount } from '@/state/useRequireAccount';
@@ -111,11 +113,16 @@ export function RouteReview() {
     }
   }
 
-  // The clip list for this route is known now, so it loads while the driver is still parked.
+  // The nav-data download (route + zones + voice clips) is made explicit and awaited here, so we
+  // can surface a clear "ready for offline driving" state while the driver is still parked.
+  const prep = useNavPrep();
+  const readyToastShown = useRef(false);
   useEffect(() => {
-    if (!route || !preferences.voiceEnabled) return;
-    void voiceEngine.preload(route.requiredVoiceKeys, language, preferences.voiceId);
-  }, [route, preferences.voiceEnabled, preferences.voiceId, language]);
+    if (prep.ready && !readyToastShown.current) {
+      readyToastShown.current = true;
+      toast.show(t('offline.ready'), 'success');
+    }
+  }, [prep.ready, toast, t]);
 
   function start(simulated: boolean) {
     voiceEngine.unlock();
@@ -351,7 +358,14 @@ export function RouteReview() {
             )}
 
             {route.verifiedClean && (
-              <Button size="large" block onClick={() => start(false)}>
+              <Button
+                size="large"
+                block
+                onClick={() => start(false)}
+                iconStart={
+                  prep.ready ? <CheckCircle2 size={20} aria-label={t('offline.ready')} /> : undefined
+                }
+              >
                 {t('route.start')}
               </Button>
             )}
