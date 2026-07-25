@@ -18,6 +18,8 @@ import type {
 
 import { api } from '@/api';
 import { currentLanguage } from '@/i18n';
+import { getActiveRouteId, getRouteBundle } from '@/lib/offlineCache';
+import { voiceEngine } from '@/voice/VoiceEngine';
 
 import { usePreferences } from './PreferencesProvider';
 
@@ -64,6 +66,12 @@ interface TripApi {
   /** Abort an in-flight compute and fall back to the last stable state (kept route, else idle). */
   cancel: () => void;
   clear: () => void;
+  /**
+   * Restore the active route (geometry+maneuvers), its zone layers and voice clips from the
+   * offline cache, e.g. after a page reload mid-drive. Resolves to true when a bundle was found
+   * and applied. Best-effort: returns false when nothing is cached or the cache is unavailable.
+   */
+  hydrateFromCache: (routeId?: string) => Promise<boolean>;
 }
 
 const TripContext = createContext<TripApi | null>(null);
@@ -269,6 +277,22 @@ export function TripProvider({ children }: { children: ReactNode }) {
     setErrorCode(null);
   }, []);
 
+  const hydrateFromCache = useCallback(async (routeId?: string): Promise<boolean> => {
+    const targetId = routeId ?? getActiveRouteId();
+    if (!targetId) return false;
+    const bundle = await getRouteBundle(targetId);
+    if (!bundle) return false;
+    // Restore the route as the sole plan; a reload has no destination context, which the drive
+    // does not need (positions and progress are derived locally from the geometry).
+    setPlan({ routes: [bundle.route] });
+    setSelectedRouteId(bundle.route.id);
+    setStatus('ready');
+    if (bundle.zones) setZones(bundle.zones);
+    if (bundle.dangerZones) setDangerZones(bundle.dangerZones);
+    void voiceEngine.loadCachedClips(bundle.voice);
+    return true;
+  }, []);
+
   const value = useMemo<TripApi>(
     () => ({
       origin,
@@ -291,6 +315,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
       recomputeFrom,
       cancel,
       clear,
+      hydrateFromCache,
     }),
     [
       origin,
@@ -312,6 +337,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
       recomputeFrom,
       cancel,
       clear,
+      hydrateFromCache,
     ],
   );
 
