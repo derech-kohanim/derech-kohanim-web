@@ -38,3 +38,17 @@ export function pathLengthMeters(points: LatLng[]): number {
 export function toLatLngs(coordinates: [number, number][]): LatLng[] {
   return coordinates.map(([lng, lat]) => ({ lat, lng }));
 }
+
+/** Index of the coordinate nearest to `target`. Returns 0 for an empty list. */
+export function nearestPointIndex(points: LatLng[], target: LatLng): number {
+  let bestIndex = 0;
+  let best = Number.POSITIVE_INFINITY;
+  for (let index = 0; index < points.length; index += 1) {
+    const gap = distanceMeters(points[index], target);
+    if (gap < best) {
+      best = gap;
+      bestIndex = index;
+    }
+  }
+  return bestIndex;
+}
