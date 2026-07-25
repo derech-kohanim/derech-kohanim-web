@@ -219,7 +219,13 @@
     "report": "דיווח",
     "reportTitle": "מה קורה בדרך",
     "reportSent": "הדיווח נשלח, תודה",
-    "eventAhead": "{{event}} בעוד {{distance}}"
+    "eventAhead": "{{event}} בעוד {{distance}}",
+    "feedbackPrompt": "איך היה הניווט?",
+    "feedbackGood": "טוב",
+    "feedbackBad": "לא טוב",
+    "feedbackProblemPlaceholder": "מה הייתה הבעיה?",
+    "feedbackThanks": "תודה על המשוב",
+    "feedbackFailed": "לא הצלחנו לשלוח את המשוב"
   },
   "events": {
     "zone": "אזור אסור",

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { LatLng } from '@dk/shared';
+import type { LatLng, NavFeedbackRating } from '@dk/shared';
 import {
   ChevronDown,
   ListOrdered,
@@ -10,6 +10,8 @@ import {
   RotateCcw,
   SkipBack,
   SkipForward,
+  ThumbsDown,
+  ThumbsUp,
   Volume2,
   VolumeX,
   X,
@@ -23,7 +25,8 @@ import { MapControls } from '@/components/map/MapControls';
 import { DEFAULT_CAMERA, type MapCamera } from '@/components/map/types';
 import { drivingZoom } from '@/components/map/zoom';
 import { StatusBanner } from '@/components/status/StatusBanner';
-import { Badge, Button, Dialog, IconButton, useToast } from '@/components/ui';
+import { api } from '@/api';
+import { Badge, Button, Dialog, IconButton, Input, useToast } from '@/components/ui';
 import { env } from '@/env';
 import { useConnectivity } from '@/lib/useConnectivity';
 import { currentLanguage } from '@/i18n';
@@ -50,6 +53,60 @@ const ANNOUNCE_FROM_METERS = 850;
 /** In-drive reporting is temporarily hidden. Flip to re-enable the "+" button and its sheet. */
 const REPORTING_ENABLED = false;
 
+/**
+ * Good/bad end-of-trip rating. A thumbs-down reveals an optional free-text field so the driver
+ * can say what went wrong. Rating stays lifted in the screen so both the arrival and the early
+ * stop dialogs can submit it before leaving.
+ */
+function FeedbackFields({
+  rating,
+  onRate,
+  text,
+  onText,
+}: {
+  rating: NavFeedbackRating | null;
+  onRate: (rating: NavFeedbackRating) => void;
+  text: string;
+  onText: (text: string) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className={styles.feedback}>
+      <span className={styles.feedbackPrompt}>{t('navigation.feedbackPrompt')}</span>
+      <div className={styles.feedbackChoices}>
+        <button
+          type="button"
+          className={styles.feedbackChoice}
+          data-selected={rating === 'good'}
+          aria-pressed={rating === 'good'}
+          onClick={() => onRate('good')}
+        >
+          <ThumbsUp size={24} aria-hidden />
+          {t('navigation.feedbackGood')}
+        </button>
+        <button
+          type="button"
+          className={styles.feedbackChoice}
+          data-selected={rating === 'bad'}
+          aria-pressed={rating === 'bad'}
+          onClick={() => onRate('bad')}
+        >
+          <ThumbsDown size={24} aria-hidden />
+          {t('navigation.feedbackBad')}
+        </button>
+      </div>
+      {rating === 'bad' && (
+        <Input
+          value={text}
+          onChange={(event) => onText(event.target.value)}
+          placeholder={t('navigation.feedbackProblemPlaceholder')}
+          autoFocus
+        />
+      )}
+    </div>
+  );
+}
+
 export function Navigation() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -69,6 +126,8 @@ export function Navigation() {
   const [stepsOpen, setStepsOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
+  const [feedbackRating, setFeedbackRating] = useState<NavFeedbackRating | null>(null);
+  const [feedbackText, setFeedbackText] = useState('');
 
   const { bundle, events, submitReport } = useRouteEventBundle(route);
   const { approaching } = useRouteEvents(events, run.travelledMeters);
@@ -195,6 +254,29 @@ export function Navigation() {
   function patchCamera(patch: Partial<MapCamera>) {
     setCamera((current) => ({ ...current, ...patch }));
     if (patch.follow) setOverview(false);
+  }
+
+  // Fire-and-forget so a slow or failing feedback POST can never keep the driver on this screen:
+  // the request runs with its own toast, and navigation home happens immediately either way.
+  function leaveWithFeedback() {
+    if (route && feedbackRating) {
+      const text = feedbackRating === 'bad' ? feedbackText.trim() : '';
+      void api
+        .submitNavFeedback({
+          routeId: route.id,
+          rating: feedbackRating,
+          text: text || undefined,
+        })
+        .then(() => toast.show(t('navigation.feedbackThanks'), 'success'))
+        .catch(() => toast.show(t('navigation.feedbackFailed'), 'danger'));
+    }
+    navigate('/');
+  }
+
+  function closeConfirmEnd() {
+    setConfirmEnd(false);
+    setFeedbackRating(null);
+    setFeedbackText('');
   }
 
   function report(type: RouteEventType) {
@@ -429,26 +511,33 @@ export function Navigation() {
 
       <Dialog
         open={confirmEnd}
-        onClose={() => setConfirmEnd(false)}
+        onClose={closeConfirmEnd}
         title={t('navigation.stopConfirm')}
         actions={
           <>
-            <Button variant="outline" onClick={() => setConfirmEnd(false)}>
+            <Button variant="outline" onClick={closeConfirmEnd}>
               {t('common.cancel')}
             </Button>
-            <Button variant="danger" onClick={() => navigate('/')}>
+            <Button variant="danger" onClick={leaveWithFeedback}>
               {t('navigation.stop')}
             </Button>
           </>
         }
-      />
+      >
+        <FeedbackFields
+          rating={feedbackRating}
+          onRate={setFeedbackRating}
+          text={feedbackText}
+          onText={setFeedbackText}
+        />
+      </Dialog>
 
       <Dialog
         open={run.status === 'arrived'}
-        onClose={() => navigate('/')}
+        onClose={leaveWithFeedback}
         title={t('navigation.arrivedTitle')}
         actions={
-          <Button size="large" onClick={() => navigate('/')}>
+          <Button size="large" onClick={leaveWithFeedback}>
             {t('navigation.finish')}
           </Button>
         }
@@ -458,6 +547,12 @@ export function Navigation() {
             ? t('navigation.arrivedBody')
             : t('navigation.arrivedBodyUnverified')}
         </div>
+        <FeedbackFields
+          rating={feedbackRating}
+          onRate={setFeedbackRating}
+          text={feedbackText}
+          onText={setFeedbackText}
+        />
       </Dialog>
     </div>
   );

@@ -219,7 +219,13 @@
     "report": "Report",
     "reportTitle": "What is on the road",
     "reportSent": "Report sent, thank you",
-    "eventAhead": "{{event}} in {{distance}}"
+    "eventAhead": "{{event}} in {{distance}}",
+    "feedbackPrompt": "How was the navigation?",
+    "feedbackGood": "Good",
+    "feedbackBad": "Bad",
+    "feedbackProblemPlaceholder": "What was the problem?",
+    "feedbackThanks": "Thanks for the feedback",
+    "feedbackFailed": "Could not send feedback"
   },
   "events": {
     "zone": "Forbidden zone",
