@@ -12,6 +12,8 @@ const ZONE_PASSED_MARGIN = 30;
 const OFF_ROUTE_METERS = 45;
 /** Consecutive off-route fixes before the state flips, to ride out a single bad GPS reading. */
 const OFF_ROUTE_HITS = 2;
+/** No fresh GPS fix within this window (while navigating) counts as a lost signal. */
+const GPS_STALE_MS = 10_000;
 
 export interface NavigationRunState {
   status: NavigationStatus;
@@ -28,6 +30,8 @@ export interface NavigationRunState {
   zoneAlert: { zone: ManeuverZone; distanceMeters: number } | null;
   /** True when the device has drifted off the route (real driving only). */
   offRoute: boolean;
+  /** True when the geolocation watch errored, or no fresh fix arrived within ~10s (real only). */
+  gpsLost: boolean;
   /** Fraction of the route already driven, for the simulation scrubber. */
   progress: number;
 }
@@ -83,6 +87,9 @@ export function useNavigationRun(
   const [offRoute, setOffRoute] = useState(false);
   const offRouteHits = useRef(0);
   const arrivedRef = useRef(false);
+  const [gpsLost, setGpsLost] = useState(false);
+  /** Timestamp of the last accepted GPS fix, for the staleness check. */
+  const lastFixAt = useRef<number | null>(null);
 
   // A fresh route (first load or a reroute onto a new path) starts the drive over: the new
   // geometry begins at the current position, so travelled resets and the off-route state clears.
@@ -113,9 +120,13 @@ export function useNavigationRun(
   // lateral offset to the nearest route point drives the off-route detector.
   useEffect(() => {
     if (simulated || !route || !navigator.geolocation) return;
+    // Give the first fix a grace window before the watchdog can flag a stale signal.
+    lastFixAt.current = Date.now();
     const watch = navigator.geolocation.watchPosition(
       (position) => {
         const here = { lat: position.coords.latitude, lng: position.coords.longitude };
+        lastFixAt.current = Date.now();
+        setGpsLost(false);
         setRawPosition(here);
         let bestIndex = 0;
         let best = Number.POSITIVE_INFINITY;
@@ -149,11 +160,27 @@ export function useNavigationRun(
         }
         lastGpsPoint.current = here;
       },
-      () => undefined,
+      // A watch error (permission revoked, position unavailable) is a lost signal, not silence.
+      () => setGpsLost(true),
       { enableHighAccuracy: true },
     );
     return () => navigator.geolocation.clearWatch(watch);
   }, [simulated, route, points, cumulative]);
+
+  // Watchdog: even without an error callback the feed can just go quiet (tunnel, urban canyon).
+  // While navigating for real, flag a lost signal when no fix has arrived within GPS_STALE_MS.
+  useEffect(() => {
+    if (simulated || !route) {
+      setGpsLost(false);
+      lastFixAt.current = null;
+      return;
+    }
+    const timer = window.setInterval(() => {
+      const last = lastFixAt.current;
+      if (last === null || Date.now() - last > GPS_STALE_MS) setGpsLost(true);
+    }, 2000);
+    return () => window.clearInterval(timer);
+  }, [simulated, route]);
 
   const routePosition = useMemo<LatLng | null>(() => {
     if (points.length === 0) return null;
@@ -253,6 +280,7 @@ export function useNavigationRun(
     speedMps: simulated ? simSpeed : gpsSpeed,
     zoneAlert,
     offRoute,
+    gpsLost,
     progress: totalMeters > 0 ? travelled / totalMeters : 0,
     paused,
     setPaused,

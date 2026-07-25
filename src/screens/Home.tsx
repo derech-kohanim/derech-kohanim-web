@@ -13,8 +13,10 @@ import type { MapCamera, SelectedZone } from '@/components/map/types';
 import { referenceBounds, zonesNear } from '@/lib/zoneFilter';
 import { ProfileButton } from '@/components/profile/ProfileButton';
 import { DestinationSearch } from '@/components/search/DestinationSearch';
+import { StatusBanner } from '@/components/status/StatusBanner';
 import { IconButton, useToast } from '@/components/ui';
 import { env } from '@/env';
+import { useConnectivity } from '@/lib/useConnectivity';
 import { useTrip, type Destination } from '@/state/TripProvider';
 import { usePreferences } from '@/state/PreferencesProvider';
 
@@ -31,6 +33,7 @@ export function Home() {
   const toast = useToast();
   const { preferences } = usePreferences();
   const { origin, zones, dangerZones, compute, locate, locating, clear } = useTrip();
+  const online = useConnectivity();
   const [saved, setSaved] = useState<SavedPlace[]>([]);
   const [camera, setCamera] = useState<MapCamera>(HOME_CAMERA);
   const [selectedZone, setSelectedZone] = useState<SelectedZone | null>(null);
@@ -88,21 +91,24 @@ export function Home() {
       <ZoneInfoSheet selection={selectedZone} onClose={() => setSelectedZone(null)} />
 
       <div className={styles.homeOverlay}>
-        <div className={styles.homeTopBar}>
-          <div className={styles.homeSearchWrap}>
-            <DestinationSearch onSelect={go} near={origin} />
-          </div>
-          {/* Reading inline-end edge inward: profile/login (outermost, flush to the edge) then
-              settings. In source order that is settings first, profile last. */}
-          <div className={styles.homeTopActions}>
-            <IconButton
-              label={t('common.settings')}
-              variant="solid"
-              size="large"
-              icon={<Settings2 size={22} />}
-              onClick={() => navigate('/settings')}
-            />
-            <ProfileButton />
+        <div className={styles.homeTop}>
+          <StatusBanner online={online} className={styles.homeStatusBanner} />
+          <div className={styles.homeTopBar}>
+            <div className={styles.homeSearchWrap}>
+              <DestinationSearch onSelect={go} near={origin} />
+            </div>
+            {/* Reading inline-end edge inward: profile/login (outermost, flush to the edge) then
+                settings. In source order that is settings first, profile last. */}
+            <div className={styles.homeTopActions}>
+              <IconButton
+                label={t('common.settings')}
+                variant="solid"
+                size="large"
+                icon={<Settings2 size={22} />}
+                onClick={() => navigate('/settings')}
+              />
+              <ProfileButton />
+            </div>
           </div>
         </div>
 

@@ -202,6 +202,18 @@
 /* Top bar reads: [search fills the row] ... [profile/login][settings] clustered at the
    inline-end. `center` puts the field and both buttons on one vertical baseline (no top
    offset); the gap token eases the field off the button cluster. */
+/* Groups the connectivity banner above the search row so the overlay's space-between still pins
+   the search cluster to the top and the controls to the bottom. */
+.homeTop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.homeStatusBanner {
+  align-self: center;
+}
+
 .homeTopBar {
   display: flex;
   align-items: center;
@@ -639,6 +651,13 @@
   background: hsl(var(--color-danger));
   color: hsl(var(--color-danger-contrast));
   font-weight: var(--font-weight-medium);
+}
+
+/* Status pills sit in the flex column between the instruction card and the map. */
+.navStatusBanner {
+  flex: none;
+  padding: var(--space-2) var(--space-3) 0;
+  z-index: 10;
 }
 
 .navMap {

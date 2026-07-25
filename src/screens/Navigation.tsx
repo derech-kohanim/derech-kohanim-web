@@ -22,8 +22,10 @@ import { MapCanvas } from '@/components/map/MapCanvas';
 import { MapControls } from '@/components/map/MapControls';
 import { DEFAULT_CAMERA, type MapCamera } from '@/components/map/types';
 import { drivingZoom } from '@/components/map/zoom';
+import { StatusBanner } from '@/components/status/StatusBanner';
 import { Badge, Button, Dialog, IconButton, useToast } from '@/components/ui';
 import { env } from '@/env';
+import { useConnectivity } from '@/lib/useConnectivity';
 import { currentLanguage } from '@/i18n';
 import { formatArrival, formatDistance, formatDuration } from '@/lib/format';
 import { maneuverIcon, maneuverText } from '@/lib/maneuver';
@@ -57,8 +59,9 @@ export function Navigation() {
   const language = currentLanguage();
 
   const { preferences, update } = usePreferences();
-  const { route, zones, dangerZones, destination, recomputeFrom } = useTrip();
+  const { route, zones, dangerZones, destination, recomputeFrom, hydrateFromCache } = useTrip();
   const run = useNavigationRun(route, simulated);
+  const online = useConnectivity();
   const [recalculating, setRecalculating] = useState(false);
 
   const [camera, setCamera] = useState<MapCamera>(DEFAULT_CAMERA);
@@ -70,9 +73,20 @@ export function Navigation() {
   const { bundle, events, submitReport } = useRouteEventBundle(route);
   const { approaching } = useRouteEvents(events, run.travelledMeters);
 
+  // A reload mid-drive loses the in-memory route. Before bouncing home, try to restore the route
+  // (and its zones + voice) from the offline cache, so a refresh or a connectivity blip resumes
+  // the drive instead of dropping it. Runs once on mount; a restore populates `route` in context.
   useEffect(() => {
-    if (!route) navigate('/', { replace: true });
-  }, [route, navigate]);
+    if (route) return;
+    let active = true;
+    void hydrateFromCache().then((restored) => {
+      if (active && !restored) navigate('/', { replace: true });
+    });
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     voiceEngine.setEnabled(preferences.voiceEnabled);
@@ -237,6 +251,15 @@ export function Navigation() {
       {zoneActive && zoneReason && (
         <div className={`${styles.navThen} ${styles['navThen--zone']}`}>{zoneReason}</div>
       )}
+
+      {/* Connectivity/GPS status sits right under the instruction card, so a lost fix or dropped
+          connection is seen without taking the eyes off the guidance. GPS is only meaningful for
+          a real drive, never a simulation. */}
+      <StatusBanner
+        online={online}
+        gpsLost={!simulated && run.gpsLost}
+        className={styles.navStatusBanner}
+      />
 
       <div className={styles.navMap}>
         <MapCanvas
