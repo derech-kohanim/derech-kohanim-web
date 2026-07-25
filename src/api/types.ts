@@ -6,6 +6,8 @@ import type {
   LatLng,
   Language,
   LoginRequest,
+  NavFeedback,
+  NavFeedbackRequest,
   NavigationProgressRequest,
   NavigationProgressResponse,
   NavigationSession,
@@ -88,6 +90,8 @@ export interface ApiClient {
   startNavigation(routeId: string, simulated: boolean): Promise<NavigationSession>;
   reportProgress(body: NavigationProgressRequest): Promise<NavigationProgressResponse>;
   endNavigation(sessionId: string, arrived: boolean): Promise<void>;
+  /** Anonymous for guests; associated with the signed-in user server-side. */
+  submitNavFeedback(body: NavFeedbackRequest): Promise<NavFeedback>;
 
   voiceManifest(language: Language, voiceId: string): Promise<VoicePackManifest>;
   resolveVoiceClips(body: VoiceResolveRequest): Promise<VoiceResolveResponse>;

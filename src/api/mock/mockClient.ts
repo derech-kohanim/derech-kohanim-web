@@ -511,6 +511,17 @@ export const mockClient: ApiClient = {
     SESSIONS.delete(sessionId);
   },
 
+  async submitNavFeedback(body) {
+    await delay(160);
+    return {
+      id: `feedback-${Date.now()}`,
+      routeId: body.routeId,
+      rating: body.rating,
+      text: body.text ?? null,
+      createdAt: new Date().toISOString(),
+    };
+  },
+
   async voiceManifest(language, voiceId) {
     await delay(140);
     // No audio files ship with the fixtures, so the client falls through to speech synthesis.

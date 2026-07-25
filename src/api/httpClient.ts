@@ -208,6 +208,7 @@ export const httpClient: ApiClient = {
     }),
   endNavigation: (sessionId, arrived) =>
     request(`/api/nav/sessions/${id(sessionId)}/end`, { method: 'POST', body: { arrived } }),
+  submitNavFeedback: (body) => request('/api/nav/feedback', { method: 'POST', body }),
 
   voiceManifest: (language, voiceId) =>
     request(`/api/voice/packs${query({ language, voice: voiceId })}`),
