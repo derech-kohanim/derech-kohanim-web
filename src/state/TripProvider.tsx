@@ -59,6 +59,8 @@ interface TripApi {
   dangerZones: DangerZoneCollection | null;
   compute: (destination: Destination) => Promise<RouteResult | null>;
   recompute: () => Promise<RouteResult | null>;
+  /** Recompute the current destination from a new origin, e.g. after drifting off-route. */
+  recomputeFrom: (from: LatLng) => Promise<RouteResult | null>;
   /** Abort an in-flight compute and fall back to the last stable state (kept route, else idle). */
   cancel: () => void;
   clear: () => void;
@@ -142,7 +144,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const runCompute = useCallback(
-    async (target: Destination): Promise<RouteResult | null> => {
+    async (target: Destination, fromOrigin?: LatLng): Promise<RouteResult | null> => {
       inFlight.current?.abort();
       const controller = new AbortController();
       inFlight.current = controller;
@@ -153,7 +155,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
       try {
         const result = await api.computeRoute(
           {
-            origin,
+            origin: fromOrigin ?? origin,
             destination: target.location,
             stringency: preferences.stringency,
             mode: 'drive',
@@ -239,6 +241,11 @@ export function TripProvider({ children }: { children: ReactNode }) {
     [destination, runCompute],
   );
 
+  const recomputeFrom = useCallback(
+    async (from: LatLng) => (destination ? runCompute(destination, from) : null),
+    [destination, runCompute],
+  );
+
   const cancel = useCallback(() => {
     inFlight.current?.abort();
     inFlight.current = null;
@@ -281,6 +288,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
       dangerZones,
       compute,
       recompute,
+      recomputeFrom,
       cancel,
       clear,
     }),
@@ -301,6 +309,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
       dangerZones,
       compute,
       recompute,
+      recomputeFrom,
       cancel,
       clear,
     ],

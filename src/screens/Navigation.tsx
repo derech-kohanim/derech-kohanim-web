@@ -36,7 +36,7 @@ import { useRouteEventBundle } from '@/navigation/useRouteEventBundle';
 import { useRouteEvents } from '@/navigation/useRouteEvents';
 import { usePreferences } from '@/state/PreferencesProvider';
 import { useTrip } from '@/state/TripProvider';
-import { assembleManeuverPhrase, assembleZonePhrase } from '@/voice/phrase';
+import { assembleManeuverPhrase, assembleReroutePhrase, assembleZonePhrase } from '@/voice/phrase';
 import { voiceEngine } from '@/voice/VoiceEngine';
 
 import navStyles from '@/navigation/navigation.module.css';
@@ -45,6 +45,8 @@ import styles from './screens.module.css';
 const SPEEDS = [1, 2, 4, 8];
 /** Below this lead distance the ladder starts announcing (first rung is 800 m). */
 const ANNOUNCE_FROM_METERS = 850;
+/** In-drive reporting is temporarily hidden. Flip to re-enable the "+" button and its sheet. */
+const REPORTING_ENABLED = false;
 
 export function Navigation() {
   const { t } = useTranslation();
@@ -55,8 +57,9 @@ export function Navigation() {
   const language = currentLanguage();
 
   const { preferences, update } = usePreferences();
-  const { route, zones, dangerZones, destination } = useTrip();
+  const { route, zones, dangerZones, destination, recomputeFrom } = useTrip();
   const run = useNavigationRun(route, simulated);
+  const [recalculating, setRecalculating] = useState(false);
 
   const [camera, setCamera] = useState<MapCamera>(DEFAULT_CAMERA);
   const [overview, setOverview] = useState(false);
@@ -149,6 +152,32 @@ export function Navigation() {
     });
   }, [maneuver, run.distanceToManeuverMeters, run.status, language, t]);
 
+  // As soon as the vehicle passes a manoeuvre, flush any instruction still being spoken for a
+  // manoeuvre already behind us, so fast progress cannot leave the voice lagging.
+  useEffect(() => {
+    voiceEngine.dropStale(maneuver?.id ?? null);
+  }, [run.currentManeuverIndex, maneuver]);
+
+  // Off-route: online, recompute from the live position and announce it; offline, do nothing and
+  // keep the route plus the live marker on screen so the driver can steer back manually.
+  useEffect(() => {
+    if (!run.offRoute || recalculating) return;
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+    const from = run.position ?? destination?.location ?? null;
+    if (!from) return;
+    setRecalculating(true);
+    voiceEngine.announce({
+      id: `reroute-${Date.now()}`,
+      groupId: 'reroute',
+      phrase: assembleReroutePhrase(t),
+      priority: 'zone',
+    });
+    void recomputeFrom(from).finally(() => setRecalculating(false));
+    // Intentionally keyed only on the off-route flag: the guard above prevents re-entry while a
+    // recompute is in flight, and a fresh route clears the flag in the run hook.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [run.offRoute]);
+
   function patchCamera(patch: Partial<MapCamera>) {
     setCamera((current) => ({ ...current, ...patch }));
     if (patch.follow) setOverview(false);
@@ -191,7 +220,9 @@ export function Navigation() {
               ? t('maneuver.zone_enter', {
                   zone: language === 'he' ? run.zoneAlert!.zone.nameHe : run.zoneAlert!.zone.name,
                 })
-              : instruction}
+              : recalculating
+                ? t('navigation.recalculating')
+                : instruction}
           </span>
         </span>
         <ChevronDown size={22} aria-hidden className={styles.navBannerChevron} />
@@ -342,12 +373,14 @@ export function Navigation() {
           icon={<ListOrdered size={22} />}
           onClick={() => setStepsOpen(true)}
         />
-        <IconButton
-          label={t('navigation.report')}
-          variant="solid"
-          icon={<Plus size={22} />}
-          onClick={() => setReportOpen(true)}
-        />
+        {REPORTING_ENABLED && (
+          <IconButton
+            label={t('navigation.report')}
+            variant="solid"
+            icon={<Plus size={22} />}
+            onClick={() => setReportOpen(true)}
+          />
+        )}
         <IconButton
           label={preferences.voiceEnabled ? t('navigation.muteVoice') : t('navigation.unmuteVoice')}
           icon={preferences.voiceEnabled ? <Volume2 size={22} /> : <VolumeX size={22} />}
@@ -367,7 +400,9 @@ export function Navigation() {
         route={route}
         currentIndex={run.currentManeuverIndex}
       />
-      <ReportSheet open={reportOpen} onClose={() => setReportOpen(false)} onReport={report} />
+      {REPORTING_ENABLED && (
+        <ReportSheet open={reportOpen} onClose={() => setReportOpen(false)} onReport={report} />
+      )}
 
       <Dialog
         open={confirmEnd}

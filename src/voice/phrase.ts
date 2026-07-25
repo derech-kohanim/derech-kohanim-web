@@ -113,6 +113,19 @@ export function assembleManeuverPhrase(
   };
 }
 
+/**
+ * Spoken when the vehicle has left the route and a new one is being computed. There is no
+ * dedicated clip, so the (missing) key falls through to the speech engine and the plain text.
+ */
+export function assembleReroutePhrase(t: Translate): AssembledPhrase {
+  const text = t('navigation.recalculating');
+  return {
+    clipKeys: ['misc.recalculating'],
+    utterances: [text],
+    text,
+  };
+}
+
 export function assembleZonePhrase(
   zoneName: string,
   approaching: boolean,

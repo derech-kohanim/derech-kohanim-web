@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type {
-  LatLng,
-  ManeuverZone,
-  NavigationProgressResponse,
-  NavigationStatus,
-  RouteResult,
-} from '@dk/shared';
+import type { LatLng, ManeuverZone, NavigationStatus, RouteResult } from '@dk/shared';
 
-import { api } from '@/api';
 import { bearingDegrees, distanceMeters, interpolate, toLatLngs } from '@/lib/geo';
 
 const TICK_MS = 200;
-const REPORT_EVERY_MS = 1000;
+/** Within this lead distance an upcoming forbidden zone raises the driving alert. */
+const ZONE_ALERT_RADIUS = 400;
+/** A zone alert lingers a little past the crossing so it does not blink off at the line. */
+const ZONE_PASSED_MARGIN = 30;
+/** Lateral offset from the route beyond which a fix counts as off-route. */
+const OFF_ROUTE_METERS = 45;
+/** Consecutive off-route fixes before the state flips, to ride out a single bad GPS reading. */
+const OFF_ROUTE_HITS = 2;
 
 export interface NavigationRunState {
   status: NavigationStatus;
@@ -26,6 +26,8 @@ export interface NavigationRunState {
   /** Current ground speed, m/s. */
   speedMps: number;
   zoneAlert: { zone: ManeuverZone; distanceMeters: number } | null;
+  /** True when the device has drifted off the route (real driving only). */
+  offRoute: boolean;
   /** Fraction of the route already driven, for the simulation scrubber. */
   progress: number;
 }
@@ -41,8 +43,10 @@ export interface NavigationRunControls {
 }
 
 /**
- * Drives the navigation screen. Position comes from the simulator or from the device; either
- * way the same progress report goes to the server, so simulation exercises the real path.
+ * Drives the navigation screen entirely on the client: position comes from the simulator or the
+ * device, progress and the zone alert are derived locally, and no per-second report is sent to
+ * the server. Off-route detection is surfaced so the screen can recompute (online) or simply
+ * keep showing the route and the live position (offline).
  */
 export function useNavigationRun(
   route: RouteResult | null,
@@ -74,35 +78,23 @@ export function useNavigationRun(
   const [gpsSpeed, setGpsSpeed] = useState(0);
   const [gpsHeading, setGpsHeading] = useState<number | null>(null);
   const lastGpsPoint = useRef<LatLng | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [report, setReport] = useState<NavigationProgressResponse | null>(null);
   const [status, setStatus] = useState<NavigationStatus>('idle');
-  const lastReport = useRef(0);
+  const [rawPosition, setRawPosition] = useState<LatLng | null>(null);
+  const [offRoute, setOffRoute] = useState(false);
+  const offRouteHits = useRef(0);
   const arrivedRef = useRef(false);
 
+  // A fresh route (first load or a reroute onto a new path) starts the drive over: the new
+  // geometry begins at the current position, so travelled resets and the off-route state clears.
+  const routeId = route?.id ?? null;
   useEffect(() => {
-    if (!route) return;
-    let cancelled = false;
-    let created: string | null = null;
-
-    void api
-      .startNavigation(route.id, simulated)
-      .then((session) => {
-        if (cancelled) {
-          void api.endNavigation(session.id, arrivedRef.current).catch(() => undefined);
-          return;
-        }
-        created = session.id;
-        setSessionId(session.id);
-        setStatus('navigating');
-      })
-      .catch(() => setStatus('navigating'));
-
-    return () => {
-      cancelled = true;
-      if (created) void api.endNavigation(created, arrivedRef.current).catch(() => undefined);
-    };
-  }, [route, simulated]);
+    setTravelled(0);
+    setOffRoute(false);
+    offRouteHits.current = 0;
+    arrivedRef.current = false;
+    if (routeId) setStatus('navigating');
+    else setStatus('idle');
+  }, [routeId]);
 
   // Simulated movement. The metres per second come from the route itself, so the replay
   // takes as long as the drive would at 1x.
@@ -117,12 +109,14 @@ export function useNavigationRun(
     return () => window.clearInterval(timer);
   }, [simulated, route, paused, speed, totalMeters, status]);
 
-  // Real positions. The same travelled distance is derived by projecting onto the route.
+  // Real positions. The same travelled distance is derived by projecting onto the route, and the
+  // lateral offset to the nearest route point drives the off-route detector.
   useEffect(() => {
     if (simulated || !route || !navigator.geolocation) return;
     const watch = navigator.geolocation.watchPosition(
       (position) => {
         const here = { lat: position.coords.latitude, lng: position.coords.longitude };
+        setRawPosition(here);
         let bestIndex = 0;
         let best = Number.POSITIVE_INFINITY;
         for (let index = 0; index < points.length; index += 1) {
@@ -133,6 +127,15 @@ export function useNavigationRun(
           }
         }
         setTravelled(cumulative[bestIndex]);
+
+        if (best > OFF_ROUTE_METERS) {
+          offRouteHits.current += 1;
+          if (offRouteHits.current >= OFF_ROUTE_HITS) setOffRoute(true);
+        } else {
+          offRouteHits.current = 0;
+          setOffRoute(false);
+        }
+
         if (typeof position.coords.speed === 'number' && position.coords.speed >= 0) {
           setGpsSpeed(position.coords.speed);
         }
@@ -152,7 +155,7 @@ export function useNavigationRun(
     return () => navigator.geolocation.clearWatch(watch);
   }, [simulated, route, points, cumulative]);
 
-  const position = useMemo<LatLng | null>(() => {
+  const routePosition = useMemo<LatLng | null>(() => {
     if (points.length === 0) return null;
     let index = 1;
     while (index < cumulative.length && cumulative[index] < travelled) index += 1;
@@ -162,37 +165,20 @@ export function useNavigationRun(
     return interpolate(points[previous], points[Math.min(index, points.length - 1)], ratio);
   }, [points, cumulative, travelled]);
 
+  // On route the marker rides the polyline; off route it shows where the vehicle actually is,
+  // so the driver can see the drift and steer back.
+  const position = !simulated && offRoute && rawPosition ? rawPosition : routePosition;
+
   // Heading along the route, used directly when simulating and as the fallback for real driving
   // before the device has reported a usable bearing.
   const routeHeading = useMemo(() => {
-    if (points.length < 2 || !position) return 0;
+    if (points.length < 2 || !routePosition) return 0;
     let index = 1;
     while (index < cumulative.length && cumulative[index] < travelled) index += 1;
-    return bearingDegrees(position, points[Math.min(index, points.length - 1)]);
-  }, [points, cumulative, travelled, position]);
+    return bearingDegrees(routePosition, points[Math.min(index, points.length - 1)]);
+  }, [points, cumulative, travelled, routePosition]);
 
   const heading = simulated ? routeHeading : gpsHeading ?? routeHeading;
-
-  useEffect(() => {
-    if (!sessionId || !position) return;
-    const now = Date.now();
-    if (now - lastReport.current < REPORT_EVERY_MS) return;
-    lastReport.current = now;
-
-    void api
-      .reportProgress({
-        sessionId,
-        location: position,
-        headingDegrees: heading,
-        speedMps: null,
-        timestamp: new Date().toISOString(),
-      })
-      .then((response) => {
-        setReport(response);
-        setStatus(response.status);
-      })
-      .catch(() => undefined);
-  }, [sessionId, position, heading]);
 
   const restart = useCallback(() => {
     setTravelled(0);
@@ -221,8 +207,8 @@ export function useNavigationRun(
     }
   }, [arrived]);
 
-  // Which manoeuvre we are heading to, derived along the route rather than from the once a
-  // second server report, so the distance counts down smoothly and the ladder fires cleanly.
+  // Which manoeuvre we are heading to, derived along the route so the distance counts down
+  // smoothly and the ladder fires cleanly.
   const maneuverIndex = useMemo(() => {
     for (let index = 0; index < maneuverDistances.length; index += 1) {
       if (maneuverDistances[index] > travelled + 5) return index;
@@ -231,6 +217,24 @@ export function useNavigationRun(
   }, [maneuverDistances, travelled]);
 
   const distanceToManeuver = Math.max(0, Math.round((maneuverDistances[maneuverIndex] ?? 0) - travelled));
+
+  // The zone alert, previously returned by the server report, computed locally from the route's
+  // zone-enter manoeuvres. The nearest one still ahead (or just crossed) inside the alert radius
+  // wins, and its along-route distance counts down like every other manoeuvre.
+  const zoneAlert = useMemo<{ zone: ManeuverZone; distanceMeters: number } | null>(() => {
+    if (!route) return null;
+    let best: { zone: ManeuverZone; distanceMeters: number } | null = null;
+    for (let index = 0; index < route.maneuvers.length; index += 1) {
+      const maneuver = route.maneuvers[index];
+      if (maneuver.action !== 'zone_enter' || !maneuver.zone) continue;
+      const distance = maneuverDistances[index] - travelled;
+      if (distance < -ZONE_PASSED_MARGIN || distance > ZONE_ALERT_RADIUS) continue;
+      if (!best || distance < best.distanceMeters) {
+        best = { zone: maneuver.zone, distanceMeters: Math.max(0, Math.round(distance)) };
+      }
+    }
+    return best;
+  }, [route, maneuverDistances, travelled]);
 
   const simSpeed =
     simulated && !paused && !arrived ? totalMeters / Math.max(route?.durationSeconds ?? 1, 1) : 0;
@@ -247,9 +251,8 @@ export function useNavigationRun(
       : 0,
     travelledMeters: travelled,
     speedMps: simulated ? simSpeed : gpsSpeed,
-    zoneAlert: report?.zoneAlert
-      ? { zone: report.zoneAlert.zone, distanceMeters: report.zoneAlert.distanceMeters }
-      : null,
+    zoneAlert,
+    offRoute,
     progress: totalMeters > 0 ? travelled / totalMeters : 0,
     paused,
     setPaused,
