@@ -14,6 +14,11 @@ export interface MapCamera {
   headingUp: boolean;
   /** Follow the vehicle. Overview turns this off to frame the whole route. */
   follow: boolean;
+  /**
+   * Let the driving speed pick the zoom (see `drivingZoom`). A deliberate zoom - the buttons or
+   * a pinch - turns this off so it sticks; recentring turns it back on.
+   */
+  autoZoom: boolean;
 }
 
 export interface MapCanvasProps {
@@ -50,4 +55,9 @@ export interface MapCanvasProps {
   events?: RouteEvent[];
 }
 
-export const DEFAULT_CAMERA: MapCamera = { zoom: 17, headingUp: true, follow: true };
+export const DEFAULT_CAMERA: MapCamera = {
+  zoom: 17,
+  headingUp: true,
+  follow: true,
+  autoZoom: true,
+};

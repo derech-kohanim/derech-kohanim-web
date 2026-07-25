@@ -22,7 +22,8 @@ import styles from './screens.module.css';
 
 const SAVED_ICON = { home: HomeIcon, work: Briefcase } as const;
 /** Home is a planning view: north up, no vehicle to follow. */
-const HOME_CAMERA: MapCamera = { zoom: 15, headingUp: false, follow: true };
+// Not a driving view: north-up, and the zoom is whatever the user picks.
+const HOME_CAMERA: MapCamera = { zoom: 15, headingUp: false, follow: true, autoZoom: false };
 
 export function Home() {
   const { t } = useTranslation();

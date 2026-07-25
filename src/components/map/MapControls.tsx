@@ -44,14 +44,15 @@ export function MapControls({
         variant="solid"
         icon={<Plus size={20} />}
         disabled={camera.zoom >= MAX_ZOOM}
-        onClick={() => onChange({ zoom: Math.min(MAX_ZOOM, camera.zoom + 1) })}
+        // A deliberate zoom wins over the automatic one until the driver recentres.
+        onClick={() => onChange({ zoom: Math.min(MAX_ZOOM, camera.zoom + 1), autoZoom: false })}
       />
       <IconButton
         label={t('navigation.zoomOut')}
         variant="solid"
         icon={<Minus size={20} />}
         disabled={camera.zoom <= MIN_ZOOM}
-        onClick={() => onChange({ zoom: Math.max(MIN_ZOOM, camera.zoom - 1) })}
+        onClick={() => onChange({ zoom: Math.max(MIN_ZOOM, camera.zoom - 1), autoZoom: false })}
       />
       {showHeading && (
         <IconButton
@@ -78,7 +79,8 @@ export function MapControls({
         icon={locating ? <Spinner size="small" /> : <LocateFixed size={20} />}
         disabled={locating}
         onClick={() => {
-          onChange({ follow: true });
+          // Recentring also hands the zoom back to the speed-driven camera.
+          onChange({ follow: true, autoZoom: true });
           onRecenter?.();
         }}
       />

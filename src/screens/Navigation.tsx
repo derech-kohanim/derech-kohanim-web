@@ -21,6 +21,7 @@ import { CertaintyIndicator } from '@/components/certainty/CertaintyIndicator';
 import { MapCanvas } from '@/components/map/MapCanvas';
 import { MapControls } from '@/components/map/MapControls';
 import { DEFAULT_CAMERA, type MapCamera } from '@/components/map/types';
+import { drivingZoom } from '@/components/map/zoom';
 import { Badge, Button, Dialog, IconButton, useToast } from '@/components/ui';
 import { env } from '@/env';
 import { currentLanguage } from '@/i18n';
@@ -107,6 +108,14 @@ export function Navigation() {
   const instruction = useMemo(
     () => (maneuver ? maneuverText(maneuver, t, language) : ''),
     [maneuver, t, language],
+  );
+
+  // While auto zoom is on the driving speed picks the zoom, so entering navigation pulls the
+  // camera in from the route overview by itself and eases out again at speed. A deliberate zoom
+  // pins it until the driver recentres.
+  const drivingCamera: MapCamera = useMemo(
+    () => (camera.autoZoom ? { ...camera, zoom: drivingZoom(run.speedMps) } : camera),
+    [camera, run.speedMps],
   );
 
   // A zone warning outranks the driving instruction, on screen and in the ear.
@@ -210,7 +219,7 @@ export function Navigation() {
           verifiedClean={route.verifiedClean}
           focusOnVehicle
           disablePoi
-          camera={camera}
+          camera={drivingCamera}
           onCameraChange={patchCamera}
           traffic={bundle?.traffic ?? []}
           events={events}
@@ -226,7 +235,7 @@ export function Navigation() {
         </div>
 
         <MapControls
-          camera={camera}
+          camera={drivingCamera}
           onChange={patchCamera}
           overview={overview}
           onToggleOverview={() => {

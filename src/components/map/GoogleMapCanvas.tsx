@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import type { DangerZoneFeature, GeoJsonLineString, ZoneFeature } from '@dk/shared';
 import { APIProvider, Map, Marker, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
 
@@ -23,7 +23,9 @@ export function GoogleMapCanvas(props: MapCanvasProps) {
           // renders a raster map that stays north-up.
           mapId={env.googleMapsId || undefined}
           defaultCenter={centre}
-          defaultZoom={props.focusOnVehicle ? DRIVING_ZOOM : props.camera?.zoom ?? DEFAULT_ZOOM}
+          defaultZoom={
+            props.focusOnVehicle ? props.camera?.zoom ?? DRIVING_ZOOM : props.camera?.zoom ?? DEFAULT_ZOOM
+          }
           gestureHandling="greedy"
           disableDefaultUI
           // No POI info cards while driving: a tap must not open a details popup.
@@ -274,6 +276,8 @@ function Camera({
   const core = useMapsLibrary('core');
   const focusPoint = focusOnVehicle ? vehicle : center;
   const following = Boolean(camera) && (camera?.follow ?? true) && Boolean(focusPoint);
+  // The zoom this component last wrote, so a zoom_changed event can be told apart from a pinch.
+  const appliedZoom = useRef<number | null>(null);
 
   // Best effort: when the driver drags the map, stop following so the camera does not fight
   // them. Recentre (or the overview toggle) turns following back on.
@@ -282,6 +286,20 @@ function Camera({
     const listener = map.addListener('dragstart', () => onCameraChange({ follow: false }));
     return () => listener.remove();
   }, [map, onCameraChange]);
+
+  // Same idea for the zoom: a pinch while following pins the zoom, so the automatic driving
+  // zoom stops overriding it on the next position update.
+  useEffect(() => {
+    if (!map || !onCameraChange || !following) return;
+    const listener = map.addListener('zoom_changed', () => {
+      const zoom = map.getZoom();
+      if (zoom == null || appliedZoom.current === null) return;
+      if (Math.abs(zoom - appliedZoom.current) < 0.01) return;
+      appliedZoom.current = zoom;
+      onCameraChange({ zoom, autoZoom: false });
+    });
+    return () => listener.remove();
+  }, [map, onCameraChange, following]);
 
   useEffect(() => {
     if (!map || !core || following) return;
@@ -312,6 +330,7 @@ function Camera({
     if (!map || !following || !focusPoint) return;
     map.panTo(focusPoint);
     if (camera) {
+      appliedZoom.current = camera.zoom;
       map.setZoom(camera.zoom);
       // Heading up needs a vector map and only applies to the driving vehicle; where it is
       // unsupported this is simply ignored.
