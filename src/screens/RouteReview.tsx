@@ -29,6 +29,7 @@ import { isZoneManeuver, maneuverIcon, maneuverText } from '@/lib/maneuver';
 import { referenceBounds, zonesNear } from '@/lib/zoneFilter';
 import { usePreferences } from '@/state/PreferencesProvider';
 import { useTrip } from '@/state/TripProvider';
+import { useRequireAccount } from '@/state/useRequireAccount';
 import { voiceEngine } from '@/voice/VoiceEngine';
 
 import styles from './screens.module.css';
@@ -58,6 +59,7 @@ export function RouteReview() {
     recompute,
   } = useTrip();
   const language = currentLanguage();
+  const requireAccount = useRequireAccount();
   const [saveOpen, setSaveOpen] = useState(false);
   const [showUnavoided, setShowUnavoided] = useState(false);
   const [selectedZone, setSelectedZone] = useState<SelectedZone | null>(null);
@@ -145,7 +147,7 @@ export function RouteReview() {
             <IconButton
               label={t('route.addFavorite')}
               icon={<Star size={22} />}
-              onClick={() => setSaveOpen(true)}
+              onClick={() => requireAccount(() => setSaveOpen(true))}
             />
           ) : undefined
         }

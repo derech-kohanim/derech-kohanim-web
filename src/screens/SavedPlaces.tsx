@@ -10,6 +10,7 @@ import { DestinationSearch } from '@/components/search/DestinationSearch';
 import { Card, CardTitle, IconButton, ListItem, useToast } from '@/components/ui';
 import { formatCoordinates } from '@/lib/coordinates';
 import { useTrip } from '@/state/TripProvider';
+import { useRequireAccount } from '@/state/useRequireAccount';
 
 import styles from './screens.module.css';
 
@@ -20,6 +21,7 @@ export function SavedPlaces() {
   const navigate = useNavigate();
   const toast = useToast();
   const { origin, compute } = useTrip();
+  const requireAccount = useRequireAccount();
   const [places, setPlaces] = useState<SavedPlace[]>([]);
   const others = places.filter((place) => place.category !== 'home' && place.category !== 'work');
 
@@ -78,15 +80,17 @@ export function SavedPlaces() {
           <DestinationSearch
             size="medium"
             near={origin}
-            onSelect={async (destination) => {
-              const created = await api.addSavedPlace({
-                label: destination.title,
-                category: 'other',
-                location: destination.location,
-                address: destination.subtitle,
-              });
-              setPlaces((current) => [...current, created]);
-            }}
+            onSelect={(destination) =>
+              requireAccount(async () => {
+                const created = await api.addSavedPlace({
+                  label: destination.title,
+                  category: 'other',
+                  location: destination.location,
+                  address: destination.subtitle,
+                });
+                setPlaces((current) => [...current, created]);
+              })
+            }
           />
         </Card>
 

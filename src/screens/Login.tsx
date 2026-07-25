@@ -1,18 +1,22 @@
 import { useState, type FormEvent } from 'react';
 import { Mail, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { GoogleButton } from '@/components/auth/GoogleButton';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button, Card, Input } from '@/components/ui';
 import { useAuth } from '@/state/AuthProvider';
+import type { LoginRedirectState } from '@/state/useRequireAccount';
 
 import styles from './screens.module.css';
 
 export function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+  // A guarded action redirects here with a return-to; honour it so the flow resumes after login.
+  const returnTo = (location.state as LoginRedirectState | null)?.returnTo ?? '/';
   const { login, loginWithGoogle, devLogin } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,7 +29,7 @@ export function Login() {
     setError(null);
     try {
       await login({ email, password });
-      navigate('/', { replace: true });
+      navigate(returnTo, { replace: true });
     } catch (cause) {
       setError((cause as { code?: string }).code ?? 'generic');
     } finally {
@@ -37,7 +41,7 @@ export function Login() {
     setBusy(true);
     try {
       await loginWithGoogle(idToken);
-      navigate('/', { replace: true });
+      navigate(returnTo, { replace: true });
     } catch (cause) {
       setError((cause as { code?: string }).code ?? 'generic');
     } finally {
@@ -50,7 +54,7 @@ export function Login() {
     setError(null);
     try {
       await devLogin(email);
-      navigate('/', { replace: true });
+      navigate(returnTo, { replace: true });
     } catch (cause) {
       setError((cause as { code?: string }).code ?? 'generic');
     } finally {

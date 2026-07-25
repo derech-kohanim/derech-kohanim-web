@@ -52,7 +52,8 @@
     "devLogin": "Developer sign in (no password)",
     "guestNote": "Guests get full navigation. An account keeps your places, preferences and history.",
     "passwordHint": "At least six characters",
-    "termsNote": "Creating an account accepts the terms of use"
+    "termsNote": "Creating an account accepts the terms of use",
+    "accountRequired": "Available only when signed in"
   },
   "search": {
     "placeholder": "Where are you going",
