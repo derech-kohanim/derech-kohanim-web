@@ -142,6 +142,30 @@ export class VoiceEngine {
     this.play(announcement);
   }
 
+  /**
+   * Safety flush for fast progress: if the announcement being played (or waiting) is a driving
+   * instruction for a manoeuvre the vehicle has already passed - its groupId is no longer the
+   * active one - drop it so the voice cannot lag behind the car. A zone warning is never cut,
+   * and a still-relevant pending instruction for the active manoeuvre is promoted in its place.
+   */
+  dropStale(activeGroupId: string | null): void {
+    const isStale = (announcement: Announcement | null): boolean =>
+      announcement !== null &&
+      announcement.priority === 'maneuver' &&
+      announcement.groupId !== activeGroupId;
+
+    if (isStale(this.pending)) this.pending = null;
+
+    if (isStale(this.current)) {
+      // A pending instruction that survived the check above belongs to the active manoeuvre;
+      // keep it and play it once the stale current is stopped.
+      const keep = this.pending;
+      this.pending = null;
+      this.stop();
+      if (keep && this.enabled) this.play(keep);
+    }
+  }
+
   /** Assembles and starts an announcement, arranging for the next pending one to follow it. */
   private play(announcement: Announcement): void {
     this.current = announcement;
