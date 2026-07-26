@@ -5,6 +5,7 @@ export { Dialog } from './Dialog';
 export { IconButton } from './IconButton';
 export { Input } from './Input';
 export { ListItem } from './ListItem';
+export { Markdown, type MarkdownProps } from './Markdown';
 export { SearchField } from './SearchField';
 export { Select, type SelectOption } from './Select';
 export { Sheet } from './Sheet';

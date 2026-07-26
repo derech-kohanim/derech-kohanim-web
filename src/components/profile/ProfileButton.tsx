@@ -30,14 +30,19 @@ export function ProfileButton() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   if (!user) {
+    // On phones the label is dropped and the control collapses to the icon, so the destination
+    // search - the reason anyone opens this screen - keeps the width. The accessible name is
+    // carried by aria-label, so nothing is lost for screen readers.
     return (
       <Button
         variant="secondary"
         size="large"
+        className={styles.loginButton}
+        aria-label={t('profile.login')}
         iconStart={<LogIn size={20} aria-hidden />}
         onClick={() => navigate('/login')}
       >
-        {t('profile.login')}
+        <span className={styles.loginLabel}>{t('profile.login')}</span>
       </Button>
     );
   }

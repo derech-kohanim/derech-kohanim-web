@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { api } from '@/api';
-import { Button, Card, Skeleton, Switch } from '@/components/ui';
+import { Button, Card, Markdown, Skeleton, Switch } from '@/components/ui';
 import { currentLanguage } from '@/i18n';
 import { useAuth } from '@/state/AuthProvider';
 import { usePreferences } from '@/state/PreferencesProvider';
@@ -179,9 +179,14 @@ export function Onboarding() {
               <Card>
                 <h2 className={styles.title}>{terms?.title || t('onboarding.termsTitle')}</h2>
                 {terms ? (
-                  <p className={`${styles.terms} ${styles.termsTall}`}>
-                    {termsBody || t('onboarding.termsEmpty')}
-                  </p>
+                  <div className={`${styles.terms} ${styles.termsTall}`}>
+                    {termsBody ? (
+                      /* The document is authored in Markdown on the server. */
+                      <Markdown source={termsBody} />
+                    ) : (
+                      t('onboarding.termsEmpty')
+                    )}
+                  </div>
                 ) : (
                   <div className={styles.stackTight}>
                     <Skeleton height="var(--space-4)" />

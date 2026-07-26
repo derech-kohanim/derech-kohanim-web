@@ -35,3 +35,27 @@
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.02em;
 }
+
+/* Signed out, the top bar shares its row with the destination search. Below the breakpoint the
+   search bar already goes full width at (40rem), the login control drops its label and becomes
+   the same circular target as the signed-in avatar. The class is doubled so it wins over the
+   button's own padding regardless of stylesheet order. */
+.loginButton {
+  flex: none;
+}
+
+@media (max-width: 39.999rem) {
+  .loginButton.loginButton {
+    inline-size: var(--touch-comfortable);
+    padding-inline: 0;
+  }
+
+  .loginLabel {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
