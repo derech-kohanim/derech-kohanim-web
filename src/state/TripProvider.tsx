@@ -18,6 +18,7 @@ import type {
 
 import { api } from '@/api';
 import { currentLanguage } from '@/i18n';
+import { analytics } from '@/lib/analytics';
 import { getActiveRouteId, getRouteBundle } from '@/lib/offlineCache';
 import { voiceEngine } from '@/voice/VoiceEngine';
 
@@ -182,12 +183,24 @@ export function TripProvider({ children }: { children: ReactNode }) {
           setSelectedRouteId(null);
           setStatus('error');
           setErrorCode('avoidance_failed');
+          analytics.event('route_computed', {
+            stringency: preferences.stringency,
+            verified_clean: false,
+            alternatives: 0,
+            success: false,
+          });
           return null;
         }
         setPlan(result);
         // A fresh compute always defaults to the best route.
         setSelectedRouteId(result.routes[0].id);
         setStatus('ready');
+        analytics.event('route_computed', {
+          stringency: preferences.stringency,
+          verified_clean: result.routes[0].verifiedClean,
+          alternatives: result.routes.length,
+          success: true,
+        });
         return result.routes[0];
       } catch (cause) {
         if (controller.signal.aborted || (cause as Error).name === 'AbortError') return null;
@@ -195,6 +208,12 @@ export function TripProvider({ children }: { children: ReactNode }) {
         setSelectedRouteId(null);
         setStatus('error');
         setErrorCode((cause as { code?: string }).code ?? 'generic');
+        analytics.event('route_computed', {
+          stringency: preferences.stringency,
+          verified_clean: false,
+          alternatives: 0,
+          success: false,
+        });
         return null;
       }
     },

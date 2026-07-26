@@ -28,6 +28,7 @@ import { StatusBanner } from '@/components/status/StatusBanner';
 import { api } from '@/api';
 import { Badge, Button, Dialog, IconButton, Input, useToast } from '@/components/ui';
 import { env } from '@/env';
+import { analytics } from '@/lib/analytics';
 import { useConnectivity } from '@/lib/useConnectivity';
 import { currentLanguage } from '@/i18n';
 import { formatArrival, formatDistance, formatDuration } from '@/lib/format';
@@ -155,6 +156,11 @@ export function Navigation() {
     voiceEngine.setEnabled(preferences.voiceEnabled);
   }, [preferences.voiceEnabled]);
 
+  // Report a completed drive once, when the run reaches its destination.
+  useEffect(() => {
+    if (run.status === 'arrived') analytics.event('navigation_arrived');
+  }, [run.status]);
+
   useEffect(() => {
     // Surfacing the assembled phrase makes the voice path verifiable without audio hardware.
     if (env.mock || import.meta.env.DEV) {
@@ -280,6 +286,7 @@ export function Navigation() {
   function leaveWithFeedback() {
     if (route && feedbackRating) {
       const text = feedbackRating === 'bad' ? feedbackText.trim() : '';
+      analytics.event('feedback_submitted', { rating: feedbackRating });
       void api
         .submitNavFeedback({
           routeId: route.id,
@@ -537,7 +544,13 @@ export function Navigation() {
             <Button variant="outline" onClick={closeConfirmEnd}>
               {t('common.cancel')}
             </Button>
-            <Button variant="danger" onClick={leaveWithFeedback}>
+            <Button
+              variant="danger"
+              onClick={() => {
+                analytics.event('navigation_stopped');
+                leaveWithFeedback();
+              }}
+            >
               {t('navigation.stop')}
             </Button>
           </>

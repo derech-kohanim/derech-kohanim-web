@@ -25,6 +25,7 @@ import { ZoneLegend } from '@/components/map/ZoneLegend';
 import type { SelectedZone } from '@/components/map/types';
 import { Badge, Button, IconButton, ListItem, Sheet, Switch, useToast } from '@/components/ui';
 import { currentLanguage } from '@/i18n';
+import { analytics } from '@/lib/analytics';
 import { formatArrival, formatDistance, formatDuration } from '@/lib/format';
 import { isZoneManeuver, maneuverIcon, maneuverText } from '@/lib/maneuver';
 import { referenceBounds, zonesNear } from '@/lib/zoneFilter';
@@ -126,6 +127,7 @@ export function RouteReview() {
 
   function start(simulated: boolean) {
     voiceEngine.unlock();
+    analytics.event('navigation_started', { simulated });
     navigate(simulated ? '/navigate?simulate=1' : '/navigate');
   }
 
