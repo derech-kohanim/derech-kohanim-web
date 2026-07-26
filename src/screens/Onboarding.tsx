@@ -143,6 +143,10 @@ export function Onboarding() {
                   <ShieldCheck size={20} className={styles.promiseIcon} aria-hidden />
                   {t('onboarding.notRabbi')}
                 </p>
+                <p className={styles.promise}>
+                  <ShieldCheck size={20} className={styles.promiseIcon} aria-hidden />
+                  {t('onboarding.privacy')}
+                </p>
               </Card>
             )}
 

@@ -50,6 +50,7 @@
     "dataTitle": "Data source",
     "dataSource": "The data about the problematic places was received from the Association for the Purity of the Kohanim (Hitachdut Taharat HaKohanim).",
     "notRabbi": "This system is not a substitute for halachic ruling.",
+    "privacy": "To improve the service, anonymous usage data is collected, with no personal identification.",
     "stringencyTitle": "Your stringency level",
     "stringencyIntro": "Choose how strict to be. You can change it any time in settings.",
     "termsTitle": "Terms of use",
