@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { App } from './App';
 import './i18n';
 import './styles/global.css';
+import { initAnalytics } from './lib/analytics';
 import { tokenColor } from './lib/tokenColor';
 
 /** Built at runtime so the mark follows the design tokens instead of a copied colour. */
@@ -15,6 +16,9 @@ function paintFavicon(): void {
 }
 
 paintFavicon();
+
+// No-op unless VITE_GA_MEASUREMENT_ID is set, so nothing loads by default.
+initAnalytics();
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Root container is missing');

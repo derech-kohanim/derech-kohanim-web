@@ -9,4 +9,6 @@ export const env = {
   /** A vector Map ID is required for the map to rotate heading-up while driving. */
   googleMapsId: import.meta.env.VITE_GOOGLE_MAPS_ID ?? '',
   googleClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '',
+  /** GA4 measurement id. Empty (the default) keeps analytics fully inert. */
+  gaMeasurementId: import.meta.env.VITE_GA_MEASUREMENT_ID ?? '',
 };

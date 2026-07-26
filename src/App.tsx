@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import { ComputingDialog } from '@/components/trip/ComputingDialog';
@@ -14,6 +14,16 @@ import { Settings } from '@/screens/Settings';
 import { AuthProvider, useAuth } from '@/state/AuthProvider';
 import { PreferencesProvider } from '@/state/PreferencesProvider';
 import { TripProvider } from '@/state/TripProvider';
+import { analytics } from '@/lib/analytics';
+
+/** Sends a GA4 page_view (path only) on every route change; inert without a measurement id. */
+function AnalyticsRouteTracker() {
+  const location = useLocation();
+  useEffect(() => {
+    analytics.pageView(location.pathname + location.search);
+  }, [location.pathname, location.search]);
+  return null;
+}
 
 /** Terms acceptance is the one gate. Everything past it works as a guest. */
 function RequireOnboarding({ children }: { children: ReactNode }) {
@@ -42,6 +52,7 @@ export function App() {
       <PreferencesProvider>
         <TripProvider>
           <ToastProvider>
+            <AnalyticsRouteTracker />
             <ComputingDialog />
             <Routes>
               <Route path="/onboarding" element={<Onboarding />} />
