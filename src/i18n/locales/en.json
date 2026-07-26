@@ -23,16 +23,38 @@
   "onboarding": {
     "welcome": "Welcome",
     "intro": "Live turn by turn navigation that respects the areas forbidden to kohanim, and verifies every route before showing it.",
-    "stringencyTitle": "Your stringency level",
-    "stringencyIntro": "Everything else follows from this choice. You can change it any time in settings.",
-    "promiseTitle": "What the system promises",
-    "promise": {
-      "verified": "Every route is checked on the server against the zone layers, not just trusted from the routing provider.",
-      "honest": "When no clean route exists you are told before departure, not halfway there.",
-      "notRabbi": "This is not a substitute for halachic guidance. The zone data comes from the association."
+    "getStarted": "Let's begin",
+    "next": "Continue",
+    "back": "Back",
+    "progress": "Step {{current}} of {{total}}",
+    "howTitle": "How it works",
+    "howIntro": "Four simple steps, from destination to the road.",
+    "steps": {
+      "destination": {
+        "title": "Choose a destination",
+        "body": "Type where you want to go, just like any navigation app."
+      },
+      "compute": {
+        "title": "We compute a clean route",
+        "body": "The system builds a route that avoids the areas forbidden to kohanim."
+      },
+      "beforeDeparture": {
+        "title": "You know before you leave",
+        "body": "If no clean route exists, you are told before departure, not mid drive."
+      },
+      "voice": {
+        "title": "Voice guidance on the road",
+        "body": "Spoken turn by turn guidance stays with you the whole way."
+      }
     },
+    "dataTitle": "Data source",
+    "dataSource": "The data about the problematic places was received from the Association for the Purity of the Kohanim (Hitachdut Taharat HaKohanim).",
+    "notRabbi": "This system is not a substitute for halachic ruling.",
+    "stringencyTitle": "Your stringency level",
+    "stringencyIntro": "Choose how strict to be. You can change it any time in settings.",
     "termsTitle": "Terms of use",
     "termsAccept": "I have read and accept the terms of use",
+    "termsEmpty": "The full terms of use will be provided soon.",
     "start": "Get started",
     "mustAccept": "You must accept the terms to continue"
   },

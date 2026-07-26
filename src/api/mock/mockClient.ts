@@ -545,7 +545,7 @@ function authResponse(user: User): AuthResponse {
   };
 }
 
-const TERMS_HE = `דרך כהנים מסייעת להימנע מאזורים המסומנים על ידי העמותה, ואינה תחליף לפסיקה הלכתית.
+const TERMS_HE = `דרך כהנים מסייעת להימנע מאזורים המסומנים על ידי התאחדות טהרת הכהנים, ואינה תחליף לפסיקה הלכתית.
 
 המערכת מאמתת כל מסלול מול שכבות האזורים לפני הצגתו. מסלול שלא ניתן לאמת מסומן במפורש ואין להתחיל ממנו ניווט חי.
 
@@ -553,7 +553,7 @@ const TERMS_HE = `דרך כהנים מסייעת להימנע מאזורים ה�
 
 אחריות הנהיגה ושמירת החוק היא על המשתמש בלבד.`;
 
-const TERMS_EN = `Derech Kohanim helps avoid the areas published by the association. It is not a substitute for halachic guidance.
+const TERMS_EN = `Derech Kohanim helps avoid the areas published by the Association for the Purity of the Kohanim. It is not a substitute for halachic guidance.
 
 Every route is verified against the zone layers before it is shown. A route that cannot be verified is marked clearly and must not be used for live navigation.
 
