@@ -52,6 +52,10 @@ const SPEEDS = [1, 2, 4, 8];
 const ANNOUNCE_FROM_METERS = 850;
 /** In-drive reporting is temporarily hidden. Flip to re-enable the "+" button and its sheet. */
 const REPORTING_ENABLED = false;
+/** How long overview stays framed before snapping back to follow, while the vehicle is moving. */
+const OVERVIEW_AUTO_RETURN_MS = 10_000;
+/** Above this speed (~7 km/h) the driver is under way, so overview should not linger. */
+const OVERVIEW_MOVING_MPS = 2;
 
 /**
  * Good/bad end-of-trip rating. A thumbs-down reveals an optional free-text field so the driver
@@ -250,6 +254,21 @@ export function Navigation() {
     // recompute is in flight, and a fresh route clears the flag in the run hook.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run.offRoute]);
+
+  // Overview is a glance, not a mode: if the driver frames the whole route while actually under
+  // way, snap back to follow after a short beat so guidance resumes on its own. When stopped
+  // (speed at/below the threshold) they are likely studying the route, so leave overview in place;
+  // this effect re-runs as speed changes, so it arms once they start moving again. Turning overview
+  // off (manually or by recentring) drops the timer via the cleanup, avoiding any fight/flicker.
+  useEffect(() => {
+    if (!overview || run.speedMps <= OVERVIEW_MOVING_MPS) return;
+    const timer = setTimeout(() => {
+      // Mirror the recenter action: resume following and hand zoom back to the speed-driven camera.
+      setOverview(false);
+      setCamera((current) => ({ ...current, follow: true, autoZoom: true }));
+    }, OVERVIEW_AUTO_RETURN_MS);
+    return () => clearTimeout(timer);
+  }, [overview, run.speedMps]);
 
   function patchCamera(patch: Partial<MapCamera>) {
     setCamera((current) => ({ ...current, ...patch }));
