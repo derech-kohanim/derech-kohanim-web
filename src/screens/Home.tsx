@@ -88,7 +88,9 @@ export function Home() {
 
       <ZoneInfoSheet selection={selectedZone} onClose={() => setSelectedZone(null)} />
 
-      <div className={styles.homeOverlay}>
+      {/* Everything floating over the map is unselectable, so a drag on (or across) the chrome
+          never becomes a text selection that swallows the pan. The search input opts back in. */}
+      <div className={`${styles.homeOverlay} dk-no-select`}>
         <div className={styles.homeTop}>
           <StatusBanner online={online} className={styles.homeStatusBanner} />
           <div className={styles.homeTopBar}>

@@ -295,7 +295,26 @@
   pointer-events: none;
 }
 
-.homeOverlay > * {
+/* The overlay is a pass-through layer, and so are its layout wrappers: only the real controls
+   take the pointer. Restoring pointer events on the wrappers instead (the old
+   `.homeOverlay > *`) handed every transparent gap a drag meant for the map - the full-width
+   top row beside the search field, the empty space around the bottom cluster - and the map
+   simply never saw it. */
+.homeTop,
+.homeTopBar,
+.homeSearchWrap,
+.homeTopActions,
+.homeBottom,
+.quickRow {
+  pointer-events: none;
+}
+
+.homeTop > *,
+.homeTopBar > *,
+.homeSearchWrap > *,
+.homeTopActions > *,
+.homeBottom > *,
+.quickRow > * {
   pointer-events: auto;
 }
 
@@ -310,8 +329,11 @@
   gap: var(--space-3);
 }
 
+/* Purely informational, so it stays out of the pointer's way even though it is a direct child
+   of the row above. */
 .homeStatusBanner {
   align-self: center;
+  pointer-events: none;
 }
 
 .homeTopBar {
@@ -766,6 +788,8 @@
   min-height: 0;
 }
 
+/* Spans the full width of the map, so the strip itself must not take the pointer: only the
+   indicator and the badge do, and a drag on the empty rest of the row still pans the map. */
 .navStatusStrip {
   position: absolute;
   inset-block-start: var(--space-3);
@@ -774,6 +798,11 @@
   align-items: center;
   gap: var(--space-2);
   flex-wrap: wrap;
+  pointer-events: none;
+}
+
+.navStatusStrip > * {
+  pointer-events: auto;
 }
 
 .navBottom {

@@ -163,7 +163,7 @@ export function RouteReview() {
         }
       />
 
-      <div className={styles.routeMap}>
+      <div className={`${styles.routeMap} dk-no-select`}>
         <MapCanvas
           zones={nearbyZones.zones}
           dangerZones={nearbyZones.danger}

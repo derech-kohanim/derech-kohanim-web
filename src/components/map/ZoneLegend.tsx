@@ -27,7 +27,8 @@ export function ZoneLegend({
   const panelId = useId();
 
   return (
-    <div className={cn(styles.legendWrap, className)}>
+    // Map chrome: never selectable, so dragging across the legend still pans the map.
+    <div className={cn(styles.legendWrap, 'dk-no-select', className)}>
       <IconButton
         label={t('map.legendTitle')}
         variant="solid"

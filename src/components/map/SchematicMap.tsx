@@ -204,7 +204,9 @@ export function SchematicMap({
   const centerY = vehicle ? toY(vehicle.lat) : HEIGHT / 2;
 
   return (
-    <div className={styles.canvas}>
+    // Not selectable: the SVG's own <text> glyphs and the hint below would otherwise turn a
+    // pan into a text selection, and the browser would keep the rest of the drag.
+    <div className={`${styles.canvas} dk-no-select`}>
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         preserveAspectRatio="xMidYMid slice"

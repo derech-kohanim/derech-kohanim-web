@@ -68,7 +68,8 @@ export function GoogleMapCanvas(props: MapCanvasProps) {
   }, [props.route, trimIndex, props.vehicle]);
 
   return (
-    <div className={styles.canvas}>
+    // Not selectable: a drag on the map is a pan, never the start of a text selection.
+    <div className={`${styles.canvas} dk-no-select`}>
       <APIProvider apiKey={env.googleMapsKey}>
         <GoogleMap
           // A vector Map ID lets the map rotate to the heading and tilt into 3D while driving;

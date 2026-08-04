@@ -88,6 +88,43 @@ svg {
   white-space: nowrap;
 }
 
+/* Map surfaces and the chrome that floats over them. A drag there means "pan the map", never
+   "select text": without this the browser starts a native selection on the overlay labels (the
+   login button, the legend, the search field) and then owns the rest of the drag, so the map
+   silently stops panning until the selection is cleared. */
+.dk-no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Nothing on these surfaces is a drag source, so no ghost image follows the cursor off an icon,
+   an avatar or the schematic map's SVG. */
+.dk-no-select img,
+.dk-no-select svg {
+  -webkit-user-drag: none;
+}
+
+/* A selection started elsewhere must not leave a highlight sitting on the overlays. */
+.dk-no-select ::selection {
+  background: transparent;
+}
+
+/* Real text entry keeps its caret and selection: an input inside a user-select:none subtree
+   misbehaves in some browsers. Google's own info windows carry place data worth copying, so
+   they stay selectable too. */
+.dk-no-select input,
+.dk-no-select textarea,
+.dk-no-select .gm-style-iw {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.dk-no-select input::selection,
+.dk-no-select textarea::selection,
+.dk-no-select .gm-style-iw ::selection {
+  background: hsl(var(--color-primary) / 0.24);
+}
+
 /* Shared page shell. Every screen is a column that fills the viewport. */
 .dk-screen {
   display: flex;

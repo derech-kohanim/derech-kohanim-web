@@ -66,7 +66,15 @@ export function ProfileButton() {
         onClick={() => setMenuOpen(true)}
       >
         {user.avatarUrl ? (
-          <img className={styles.avatarImg} src={user.avatarUrl} alt="" referrerPolicy="no-referrer" />
+          // Not a drag source: over the map, dragging the avatar out as a ghost image would
+          // both look wrong and steal the pan. `-webkit-user-drag` does not cover Firefox.
+          <img
+            className={styles.avatarImg}
+            src={user.avatarUrl}
+            alt=""
+            referrerPolicy="no-referrer"
+            draggable={false}
+          />
         ) : (
           <span className={styles.avatarInitials} aria-hidden>
             {initials(user.displayName, user.email) || <UserRound size={20} />}

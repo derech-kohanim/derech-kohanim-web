@@ -370,7 +370,7 @@ export function Navigation() {
         className={styles.navStatusBanner}
       />
 
-      <div className={styles.navMap}>
+      <div className={`${styles.navMap} dk-no-select`}>
         <MapCanvas
           zones={nearbyZones.zones}
           dangerZones={nearbyZones.danger}

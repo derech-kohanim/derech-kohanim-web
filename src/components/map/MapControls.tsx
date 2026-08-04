@@ -38,7 +38,8 @@ export function MapControls({
   const { t } = useTranslation();
 
   return (
-    <div className={floating ? styles.controls : styles.controlsStatic}>
+    // Map chrome: never selectable, so a drag that grazes a button still pans the map.
+    <div className={`${floating ? styles.controls : styles.controlsStatic} dk-no-select`}>
       <IconButton
         label={t('navigation.zoomIn')}
         variant="solid"
