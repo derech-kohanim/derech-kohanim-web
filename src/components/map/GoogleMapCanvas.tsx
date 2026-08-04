@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useRef } from 'react';
 import type { DangerZoneFeature, GeoJsonLineString, ZoneFeature } from '@dk/shared';
-import { APIProvider, Map, Marker, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
+// Aliased: the overlays below keep their drawn polygons in a plain `Map`, which the component of
+// the same name would otherwise shadow.
+import { APIProvider, Map as GoogleMap, Marker, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
 
 import { env } from '@/env';
 import { nearestPointIndex, toLatLngs } from '@/lib/geo';
 import { tokenColor } from '@/lib/tokenColor';
+import type { GeoBox } from '@/lib/zoneFilter';
 import { EVENT_EMOJI, type RouteEvent, type TrafficSegment } from '@/navigation/events';
 
 import styles from './map.module.css';
@@ -14,6 +17,18 @@ const DEFAULT_ZOOM = 14;
 const DRIVING_ZOOM = 17;
 /** The 3D perspective tilt held while driving, so navigation is always a 3D roadmap. */
 const DRIVING_TILT = 45;
+/**
+ * Shortest gap between two viewport reports. A drag fires `bounds_changed` on every frame and the
+ * driving camera pans on every position fix, so the reports are throttled: re-filtering the
+ * country-wide zone layers belongs at human pace, not at frame pace.
+ */
+const VIEWPORT_THROTTLE_MS = 250;
+
+/** A zone polygon already on the map, held with the feature it was built from. */
+interface DrawnZone<T> {
+  feature: T;
+  polygon: google.maps.Polygon;
+}
 
 // Waze-style dimensional route: a darker casing under a brighter active line. Literal hex is
 // used per the design; the active blue stays close to the app's primary while reading as "route".
@@ -55,7 +70,7 @@ export function GoogleMapCanvas(props: MapCanvasProps) {
   return (
     <div className={styles.canvas}>
       <APIProvider apiKey={env.googleMapsKey}>
-        <Map
+        <GoogleMap
           // A vector Map ID lets the map rotate to the heading and tilt into 3D while driving;
           // without one Google renders a raster map that stays flat and north-up.
           mapId={env.googleMapsId || undefined}
@@ -74,6 +89,7 @@ export function GoogleMapCanvas(props: MapCanvasProps) {
           clickableIcons={!props.disablePoi}
           style={{ inlineSize: '100%', blockSize: '100%' }}
         >
+          <Viewport onChange={props.onVisibleBoundsChange} />
           <Zones zones={props.zones} onSelect={props.onZoneSelect} />
           <DangerZones zones={props.dangerZones ?? []} onSelect={props.onZoneSelect} />
           <Line geometry={props.naiveRoute} color={tokenColor('route-naive')} weight={3} dashed />
@@ -106,10 +122,61 @@ export function GoogleMapCanvas(props: MapCanvasProps) {
             headingUp={mapHeadingUp}
           />
           <Camera {...props} />
-        </Map>
+        </GoogleMap>
       </APIProvider>
     </div>
   );
+}
+
+/**
+ * Reports the visible area upward, throttled. `idle` alone would miss a long uninterrupted drag
+ * (it only fires once the camera stops), so `bounds_changed` drives the same throttled report and
+ * `idle` guarantees a final, exact one.
+ */
+function Viewport({ onChange }: { onChange?: (bounds: GeoBox) => void }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map || !onChange) return;
+    let timer = 0;
+    let lastReport = 0;
+
+    const report = () => {
+      const bounds = map.getBounds();
+      if (!bounds) return;
+      lastReport = Date.now();
+      const northEast = bounds.getNorthEast();
+      const southWest = bounds.getSouthWest();
+      onChange({
+        minLat: southWest.lat(),
+        maxLat: northEast.lat(),
+        minLng: southWest.lng(),
+        maxLng: northEast.lng(),
+      });
+    };
+
+    // Trailing throttle: during a continuous drag the wait shrinks as time passes since the last
+    // report, so it lands about once per interval instead of never.
+    const schedule = () => {
+      window.clearTimeout(timer);
+      const wait = Math.max(0, VIEWPORT_THROTTLE_MS - (Date.now() - lastReport));
+      timer = window.setTimeout(report, wait);
+    };
+
+    const listeners = [
+      map.addListener('bounds_changed', schedule),
+      map.addListener('idle', schedule),
+    ];
+    // A map that is already idle emits nothing, so take the opening reading directly.
+    schedule();
+
+    return () => {
+      window.clearTimeout(timer);
+      listeners.forEach((listener) => listener.remove());
+    };
+  }, [map, onChange]);
+
+  return null;
 }
 
 function Traffic({
@@ -182,10 +249,28 @@ function Zones({
 }) {
   const map = useMap();
   const maps = useMapsLibrary('maps');
+  // The polygons on the map, keyed by zone id. The drawn set now changes with the camera, so only
+  // the difference is applied: rebuilding every polygon on each pan would be slow and flickery.
+  // The feature is kept alongside so a re-fetched layer (new objects, same ids) still redraws.
+  const drawn = useRef(new Map<number, DrawnZone<ZoneFeature>>());
+  // Held in a ref so a fresh callback identity does not force that rebuild either.
+  const select = useRef(onSelect);
+  const clickable = Boolean(onSelect);
+
+  useEffect(() => {
+    select.current = onSelect;
+  }, [onSelect]);
 
   useEffect(() => {
     if (!map || !maps) return;
-    const polygons = zones.map((zone) => {
+    const wanted = new Map(zones.map((zone) => [zone.properties.id, zone]));
+    for (const [id, entry] of drawn.current) {
+      if (wanted.get(id) === entry.feature) continue;
+      entry.polygon.setMap(null);
+      drawn.current.delete(id);
+    }
+    for (const zone of zones) {
+      if (drawn.current.has(zone.properties.id)) continue;
       // Colour each polygon by its own stringency layer, not by the requested level.
       const color = tokenColor(`zone-${zone.properties.stringency}`);
       const polygon = new maps.Polygon({
@@ -195,16 +280,25 @@ function Zones({
         strokeWeight: 2,
         fillColor: color,
         fillOpacity: 0.24,
-        clickable: Boolean(onSelect),
+        clickable,
         map,
       });
-      if (onSelect) {
-        polygon.addListener('click', () => onSelect({ kind: 'stringency', feature: zone }));
+      if (clickable) {
+        polygon.addListener('click', () => select.current?.({ kind: 'stringency', feature: zone }));
       }
-      return polygon;
-    });
-    return () => polygons.forEach((polygon) => polygon.setMap(null));
-  }, [map, maps, zones, onSelect]);
+      drawn.current.set(zone.properties.id, { feature: zone, polygon });
+    }
+  }, [map, maps, zones, clickable]);
+
+  // A new map instance (or a change in interactivity) invalidates every polygon, so they are all
+  // dropped and the effect above rebuilds them; on unmount they are simply cleared.
+  useEffect(() => {
+    const entries = drawn.current;
+    return () => {
+      entries.forEach((entry) => entry.polygon.setMap(null));
+      entries.clear();
+    };
+  }, [map, maps, clickable]);
 
   return null;
 }
@@ -218,13 +312,29 @@ function DangerZones({
 }) {
   const map = useMap();
   const maps = useMapsLibrary('maps');
+  // Same diffing as the stringency layer, and it matters more here: a danger ring carries
+  // thousands of vertices, so rebuilding one that is already on screen is pure waste.
+  const drawn = useRef(new Map<number, DrawnZone<DangerZoneFeature>>());
+  const select = useRef(onSelect);
+  const clickable = Boolean(onSelect);
+
+  useEffect(() => {
+    select.current = onSelect;
+  }, [onSelect]);
 
   useEffect(() => {
     if (!map || !maps) return;
     // Danger zones are a separate axis: their own violet token and a heavier outline so they
     // never read as one of the three stringency layers.
     const color = tokenColor('zone-danger');
-    const polygons = zones.map((zone) => {
+    const wanted = new Map(zones.map((zone) => [zone.properties.id, zone]));
+    for (const [id, entry] of drawn.current) {
+      if (wanted.get(id) === entry.feature) continue;
+      entry.polygon.setMap(null);
+      drawn.current.delete(id);
+    }
+    for (const zone of zones) {
+      if (drawn.current.has(zone.properties.id)) continue;
       const polygon = new maps.Polygon({
         paths: zone.geometry.coordinates.map((ring) => ring.map(([lng, lat]) => ({ lat, lng }))),
         strokeColor: color,
@@ -232,16 +342,23 @@ function DangerZones({
         strokeWeight: 3,
         fillColor: color,
         fillOpacity: 0.32,
-        clickable: Boolean(onSelect),
+        clickable,
         map,
       });
-      if (onSelect) {
-        polygon.addListener('click', () => onSelect({ kind: 'danger', feature: zone }));
+      if (clickable) {
+        polygon.addListener('click', () => select.current?.({ kind: 'danger', feature: zone }));
       }
-      return polygon;
-    });
-    return () => polygons.forEach((polygon) => polygon.setMap(null));
-  }, [map, maps, zones, onSelect]);
+      drawn.current.set(zone.properties.id, { feature: zone, polygon });
+    }
+  }, [map, maps, zones, clickable]);
+
+  useEffect(() => {
+    const entries = drawn.current;
+    return () => {
+      entries.forEach((entry) => entry.polygon.setMap(null));
+      entries.clear();
+    };
+  }, [map, maps, clickable]);
 
   return null;
 }
@@ -431,6 +548,9 @@ function Camera({
     return () => listener.remove();
   }, [map, onCameraChange, following]);
 
+  // Frames the trip: the route and its endpoints. Deliberately not keyed on the zones - the drawn
+  // zone set follows the camera now, so re-fitting whenever it changes would snap the map back and
+  // undo the user's own panning.
   useEffect(() => {
     if (!map || !core || following) return;
     const bounds = new core.LatLngBounds();
@@ -445,18 +565,30 @@ function Camera({
         used = true;
       }
     }
-    if (!used) {
-      for (const zone of zones) {
-        for (const [lng, lat] of zone.geometry.coordinates[0]) {
-          bounds.extend({ lat, lng });
-          used = true;
-        }
-      }
-    }
     if (used) map.fitBounds(bounds, 64);
     // Overview/planning is a flat top-down frame; the 3D tilt belongs to the driving view.
     map.setTilt?.(0);
-  }, [map, core, route, origin, destination, zones, following]);
+  }, [map, core, route, origin, destination, following]);
+
+  // With no route and no endpoints to anchor on, the zones themselves frame the opening view.
+  // Once only, and for the same reason: from here on they follow the camera, so framing them
+  // again on every change would let the camera drive itself in a circle.
+  const framedFromZones = useRef(false);
+  useEffect(() => {
+    if (!map || !core || following || framedFromZones.current) return;
+    if (route || origin || destination) return;
+    const bounds = new core.LatLngBounds();
+    let used = false;
+    for (const zone of zones) {
+      for (const [lng, lat] of zone.geometry.coordinates[0]) {
+        bounds.extend({ lat, lng });
+        used = true;
+      }
+    }
+    if (!used) return;
+    map.fitBounds(bounds, 64);
+    framedFromZones.current = true;
+  }, [map, core, zones, route, origin, destination, following]);
 
   useEffect(() => {
     if (!map || !following || !focusPoint) return;

@@ -28,7 +28,8 @@ import { currentLanguage } from '@/i18n';
 import { analytics } from '@/lib/analytics';
 import { formatArrival, formatDistance, formatDuration } from '@/lib/format';
 import { isZoneManeuver, maneuverIcon, maneuverText } from '@/lib/maneuver';
-import { referenceBounds, zonesNear } from '@/lib/zoneFilter';
+import { useVisibleZones } from '@/lib/useVisibleZones';
+import { referenceBounds } from '@/lib/zoneFilter';
 import { useNavPrep } from '@/navigation/useNavPrep';
 import { usePreferences } from '@/state/PreferencesProvider';
 import { useTrip } from '@/state/TripProvider';
@@ -67,19 +68,19 @@ export function RouteReview() {
   const [showUnavoided, setShowUnavoided] = useState(false);
   const [selectedZone, setSelectedZone] = useState<SelectedZone | null>(null);
 
-  // Keep only the zones near this route/endpoints, so country-wide data neither distorts the
-  // framing nor draws hundreds of polygons.
-  const nearbyZones = useMemo(() => {
-    const bounds = referenceBounds(
-      [origin, destination?.location ?? null],
-      [route?.geometry ?? null, unavoidedRoute?.geometry ?? null],
-      0.05,
-    );
-    return {
-      zones: zonesNear(zones?.features ?? [], bounds),
-      danger: zonesNear(dangerZones?.features ?? [], bounds),
-    };
-  }, [zones, dangerZones, origin, destination, route, unavoidedRoute]);
+  // Keep only the zones the map is showing, so country-wide data never draws hundreds of polygons
+  // at once, while panning or zooming out still reveals the zones wherever the user looks. The
+  // route corridor is the fallback frame, used until the map reports its first viewport.
+  const fallbackBounds = useMemo(
+    () =>
+      referenceBounds(
+        [origin, destination?.location ?? null],
+        [route?.geometry ?? null, unavoidedRoute?.geometry ?? null],
+        0.05,
+      ),
+    [origin, destination, route, unavoidedRoute],
+  );
+  const nearbyZones = useVisibleZones(zones?.features, dangerZones?.features, fallbackBounds);
 
   useEffect(() => {
     if (!destination) navigate('/', { replace: true });
@@ -167,6 +168,7 @@ export function RouteReview() {
           zones={nearbyZones.zones}
           dangerZones={nearbyZones.danger}
           onZoneSelect={setSelectedZone}
+          onVisibleBoundsChange={nearbyZones.onVisibleBoundsChange}
           origin={origin}
           destination={destination?.location ?? null}
           // Only draw a line for a settled route. While computing (the dialog is up) or idle,

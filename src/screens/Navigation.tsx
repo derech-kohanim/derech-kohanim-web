@@ -33,7 +33,8 @@ import { useConnectivity } from '@/lib/useConnectivity';
 import { currentLanguage } from '@/i18n';
 import { formatArrival, formatDistance, formatDuration } from '@/lib/format';
 import { maneuverIcon, maneuverText } from '@/lib/maneuver';
-import { referenceBounds, zonesNear } from '@/lib/zoneFilter';
+import { useVisibleZones } from '@/lib/useVisibleZones';
+import { referenceBounds } from '@/lib/zoneFilter';
 import { EVENT_EMOJI, eventLabel, type RouteEventType } from '@/navigation/events';
 import { ReportSheet } from '@/navigation/ReportSheet';
 import { StepList } from '@/navigation/StepList';
@@ -175,14 +176,14 @@ export function Navigation() {
   const maneuver = route?.maneuvers[run.currentManeuverIndex] ?? null;
   const next = route?.maneuvers[run.currentManeuverIndex + 1] ?? null;
 
-  // Draw only the zones near the route, so country-wide data stays performant while driving.
-  const nearbyZones = useMemo(() => {
-    const bounds = referenceBounds([destination?.location ?? null], [route?.geometry ?? null], 0.05);
-    return {
-      zones: zonesNear(zones?.features ?? [], bounds),
-      danger: zonesNear(dangerZones?.features ?? [], bounds),
-    };
-  }, [zones, dangerZones, destination, route]);
+  // Draw only the zones the driving camera is showing, so country-wide data stays performant while
+  // driving and an overview or a pinch out still fills in the zones it uncovers. The route
+  // corridor is the fallback frame, used until the map reports its first viewport.
+  const fallbackBounds = useMemo(
+    () => referenceBounds([destination?.location ?? null], [route?.geometry ?? null], 0.05),
+    [destination, route],
+  );
+  const nearbyZones = useVisibleZones(zones?.features, dangerZones?.features, fallbackBounds);
 
   // The driving zone alert stays glanceable: the name is in the banner, the city and the short
   // reason (the halachic why) go on the secondary line.
@@ -373,6 +374,7 @@ export function Navigation() {
         <MapCanvas
           zones={nearbyZones.zones}
           dangerZones={nearbyZones.danger}
+          onVisibleBoundsChange={nearbyZones.onVisibleBoundsChange}
           origin={null}
           destination={destination?.location ?? null}
           route={route.geometry}

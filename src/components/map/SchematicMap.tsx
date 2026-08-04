@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import type {
   DangerZoneFeature,
   GeoJsonLineString,
@@ -117,6 +117,7 @@ export function SchematicMap({
   focusOnVehicle = false,
   center,
   camera,
+  onVisibleBoundsChange,
   traffic = [],
   events = [],
 }: MapCanvasProps) {
@@ -150,6 +151,36 @@ export function SchematicMap({
       vehicle,
     ],
   );
+
+  // What is reported upward, so the screen can filter the zone layers to what is on screen. In
+  // the camera-driven branch that is the visible frame itself, so zooming out really does reveal
+  // more zones. The fit branch derives its frame FROM the drawn geometry, zones included, so the
+  // trip geometry alone is reported there: feeding a zone-derived box back into the zone filter
+  // would leave it chasing its own tail.
+  const reportedBounds = useMemo(() => {
+    if (following && focusPoint) return boundsAround(focusPoint, camera?.zoom ?? 16);
+    const lines = [route, naiveRoute, unavoidedRoute, ...alternativeRoutes];
+    const points = [origin, destination, vehicle];
+    // Nothing to anchor on: stay quiet and let the screen's own fallback bounds decide.
+    if (!lines.some(Boolean) && !points.some(Boolean)) return null;
+    return collectBounds([], lines, points);
+  }, [
+    following,
+    focusPoint,
+    camera?.zoom,
+    route,
+    naiveRoute,
+    unavoidedRoute,
+    alternativeRoutes,
+    origin,
+    destination,
+    vehicle,
+  ]);
+
+  // Memoised above, so this only fires on a real camera or geometry change; no debounce needed.
+  useEffect(() => {
+    if (onVisibleBoundsChange && reportedBounds) onVisibleBoundsChange(reportedBounds);
+  }, [onVisibleBoundsChange, reportedBounds]);
 
   const toX = (lng: number) => ((lng - bounds.minLng) / (bounds.maxLng - bounds.minLng)) * WIDTH;
   const toY = (lat: number) =>

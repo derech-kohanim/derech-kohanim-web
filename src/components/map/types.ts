@@ -1,5 +1,6 @@
 import type { DangerZoneFeature, GeoJsonLineString, LatLng, ZoneFeature } from '@dk/shared';
 
+import type { GeoBox } from '@/lib/zoneFilter';
 import type { RouteEvent, TrafficSegment } from '@/navigation/events';
 
 /** A tapped zone, discriminated so the info card knows which fields to read. */
@@ -51,6 +52,12 @@ export interface MapCanvasProps {
   camera?: MapCamera;
   /** Lets the map hand camera changes back, e.g. dropping follow when the driver pans. */
   onCameraChange?: (patch: Partial<MapCamera>) => void;
+  /**
+   * The area the map currently shows, reported as the camera settles. The screen filters the
+   * country-wide zone layers against it, so zones are drawn wherever the user pans or zooms to
+   * and not only around the trip.
+   */
+  onVisibleBoundsChange?: (bounds: GeoBox) => void;
   traffic?: TrafficSegment[];
   events?: RouteEvent[];
 }

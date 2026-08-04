@@ -10,7 +10,8 @@ import { MapControls } from '@/components/map/MapControls';
 import { ZoneInfoSheet } from '@/components/map/ZoneInfoSheet';
 import { ZoneLegend } from '@/components/map/ZoneLegend';
 import type { MapCamera, SelectedZone } from '@/components/map/types';
-import { referenceBounds, zonesNear } from '@/lib/zoneFilter';
+import { useVisibleZones } from '@/lib/useVisibleZones';
+import { referenceBounds } from '@/lib/zoneFilter';
 import { ProfileButton } from '@/components/profile/ProfileButton';
 import { DestinationSearch } from '@/components/search/DestinationSearch';
 import { StatusBanner } from '@/components/status/StatusBanner';
@@ -38,15 +39,11 @@ export function Home() {
   const [camera, setCamera] = useState<MapCamera>(HOME_CAMERA);
   const [selectedZone, setSelectedZone] = useState<SelectedZone | null>(null);
 
-  // Only the zones near the planning view: with the data covering the whole country this keeps
-  // framing anchored on the current area and avoids drawing hundreds of far-away polygons.
-  const nearbyZones = useMemo(() => {
-    const bounds = referenceBounds([origin], [], 0.12);
-    return {
-      zones: zonesNear(zones?.features ?? [], bounds),
-      danger: zonesNear(dangerZones?.features ?? [], bounds),
-    };
-  }, [zones, dangerZones, origin]);
+  // Only the zones the map is actually showing: the country-wide layers follow the camera, so
+  // panning or zooming out reveals the zones there instead of leaving the area blank. Until the
+  // map has reported its first viewport, the area around the origin stands in.
+  const fallbackBounds = useMemo(() => referenceBounds([origin], [], 0.12), [origin]);
+  const nearbyZones = useVisibleZones(zones?.features, dangerZones?.features, fallbackBounds);
 
   // Landing on the planning screen resets any prior route, so the next compute starts clean and
   // no stale line survives a cancel -> back -> recompute.
@@ -82,6 +79,7 @@ export function Home() {
           zones={nearbyZones.zones}
           dangerZones={nearbyZones.danger}
           onZoneSelect={setSelectedZone}
+          onVisibleBoundsChange={nearbyZones.onVisibleBoundsChange}
           origin={origin}
           center={origin}
           camera={camera}
