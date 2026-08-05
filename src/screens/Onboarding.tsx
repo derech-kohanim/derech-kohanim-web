@@ -19,6 +19,7 @@ import { currentLanguage } from '@/i18n';
 import { useAuth } from '@/state/AuthProvider';
 import { usePreferences } from '@/state/PreferencesProvider';
 
+import { LegalLinks } from './Legal';
 import styles from './screens.module.css';
 
 const LEVELS: Stringency[] = ['basic', 'taharat', 'machmirim'];
@@ -208,6 +209,8 @@ export function Onboarding() {
                     {t('onboarding.mustAccept')}
                   </p>
                 )}
+                {/* The full documents open in their own tab, so the wizard keeps its place. */}
+                <LegalLinks />
               </Card>
             )}
           </div>

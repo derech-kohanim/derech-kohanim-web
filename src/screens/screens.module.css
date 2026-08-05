@@ -147,6 +147,52 @@
   max-height: 40vh;
 }
 
+/* Policy pages (/terms, /privacy) ---------------------------------------- */
+
+/* Says the document on screen is the bundled copy, not the server's. Warning-toned because it
+   is a caveat about the text below it, not decoration. */
+.legalNotice {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: hsl(var(--color-warning) / 0.18);
+  color: hsl(var(--color-warning-contrast));
+  font-size: var(--font-size-label);
+  text-align: start;
+}
+
+.legalList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding-inline-start: var(--space-5);
+  font-size: var(--font-size-label);
+  line-height: var(--line-height-relaxed);
+  color: hsl(var(--color-text-muted));
+  text-align: start;
+}
+
+/* Terms and privacy links under a form or a wizard step: quiet, inline, and not competing with
+   the action above them. */
+.legalLinks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  font-size: var(--font-size-caption);
+  color: hsl(var(--color-text-muted));
+  text-align: start;
+}
+
+.legalLink {
+  color: hsl(var(--color-primary));
+  font-weight: var(--font-weight-semibold);
+  text-decoration: underline;
+  min-height: var(--touch-min);
+  display: inline-flex;
+  align-items: center;
+}
+
 .divider {
   display: flex;
   align-items: center;

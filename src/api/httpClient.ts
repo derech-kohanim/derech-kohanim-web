@@ -130,6 +130,8 @@ export const httpClient: ApiClient = {
     request('/api/users/me/preferences', { method: 'PATCH', body: preferences }),
   terms: (language) => request(`/api/auth/terms${query({ language })}`),
   acceptTerms: (version) => request('/api/auth/accept-terms', { method: 'POST', body: { version } }),
+  requestAccountDeletion: (body) =>
+    request('/api/account/deletion-requests', { method: 'POST', body: { ...body, source: 'web' } }),
 
   // Search and details are GET: the query string carries the request, and `near` is split
   // into the lat/lng params the API expects. The abort signal is preserved on the GET.

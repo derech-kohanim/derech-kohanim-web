@@ -11,4 +11,9 @@ export const env = {
   googleClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '',
   /** GA4 measurement id. Empty (the default) keeps analytics fully inert. */
   gaMeasurementId: import.meta.env.VITE_GA_MEASUREMENT_ID ?? '',
+  /**
+   * Address for privacy and data questions, shown at the foot of the policy pages. Empty (the
+   * default) hides the contact section rather than printing an address nobody reads.
+   */
+  contactEmail: import.meta.env.VITE_CONTACT_EMAIL ?? '',
 };

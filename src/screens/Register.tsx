@@ -8,6 +8,7 @@ import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button, Card, Input } from '@/components/ui';
 import { useAuth } from '@/state/AuthProvider';
 
+import { LegalLinks } from './Legal';
 import styles from './screens.module.css';
 
 export function Register() {
@@ -86,6 +87,7 @@ export function Register() {
               onChange={(event) => setPassword(event.target.value)}
             />
             <p className={styles.choiceHint}>{t('auth.termsNote')}</p>
+            <LegalLinks />
             <Button type="submit" size="large" block loading={busy}>
               {t('auth.register')}
             </Button>

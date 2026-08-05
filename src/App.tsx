@@ -3,7 +3,9 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import { ComputingDialog } from '@/components/trip/ComputingDialog';
 import { ToastProvider } from '@/components/ui';
+import { DeleteAccount } from '@/screens/DeleteAccount';
 import { Home } from '@/screens/Home';
+import { Privacy, Terms } from '@/screens/Legal';
 import { Login } from '@/screens/Login';
 import { Navigation } from '@/screens/Navigation';
 import { Onboarding } from '@/screens/Onboarding';
@@ -58,6 +60,12 @@ export function App() {
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              {/* Policy and data-deletion pages are deliberately outside the onboarding gate:
+                  they must be readable before the terms are accepted, and reachable by someone
+                  who has already signed out or removed the app. */}
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/delete-account" element={<DeleteAccount />} />
               <Route
                 path="/"
                 element={

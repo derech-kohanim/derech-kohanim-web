@@ -1,5 +1,5 @@
 import type { Language, Stringency, ThemePreference } from '@dk/shared';
-import { Check, ChevronLeft, Star } from 'lucide-react';
+import { Check, ChevronLeft, FileText, ShieldCheck, Star, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
@@ -107,6 +107,28 @@ export function Settings() {
             title={t('settings.savedPlaces')}
             trailing={<ChevronLeft size={18} aria-hidden />}
             onClick={() => navigate('/saved')}
+          />
+        </Card>
+
+        <Card>
+          <CardTitle>{t('settings.legal')}</CardTitle>
+          <ListItem
+            leading={<FileText size={20} aria-hidden />}
+            title={t('legal.termsTitle')}
+            trailing={<ChevronLeft size={18} aria-hidden />}
+            onClick={() => navigate('/terms')}
+          />
+          <ListItem
+            leading={<ShieldCheck size={20} aria-hidden />}
+            title={t('legal.privacyTitle')}
+            trailing={<ChevronLeft size={18} aria-hidden />}
+            onClick={() => navigate('/privacy')}
+          />
+          <ListItem
+            leading={<Trash2 size={20} aria-hidden />}
+            title={t('legal.deleteAccountAction')}
+            trailing={<ChevronLeft size={18} aria-hidden />}
+            onClick={() => navigate('/delete-account')}
           />
         </Card>
 

@@ -1,6 +1,8 @@
 import type {
   AuthResponse,
+  CreateDeletionRequest,
   CreateReportRequest,
+  DeletionRequestReceipt,
   DangerZoneCollection,
   GoogleAuthRequest,
   LatLng,
@@ -70,6 +72,11 @@ export interface ApiClient {
   updatePreferences(preferences: UserPreferences): Promise<User>;
   terms(language: Language): Promise<TermsDocument>;
   acceptTerms(version: string): Promise<User>;
+  /**
+   * Asks for the account and its data to be deleted. Open to guests too, so someone who has
+   * already signed out (or uninstalled) can still ask. Records a request; deletes nothing.
+   */
+  requestAccountDeletion(body: CreateDeletionRequest): Promise<DeletionRequestReceipt>;
 
   searchPlaces(body: PlaceSearchRequest, options?: RequestOptions): Promise<PlaceSearchResponse>;
   placeDetails(body: PlaceDetailsRequest): Promise<PlaceSuggestion>;

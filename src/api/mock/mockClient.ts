@@ -275,6 +275,16 @@ export const mockClient: ApiClient = {
     };
   },
 
+  async requestAccountDeletion() {
+    await delay(jitter(240, 480));
+    // Nothing is stored: the mock has no operator queue to put a request into.
+    return {
+      id: 'del-mock',
+      status: 'pending' as const,
+      createdAt: new Date().toISOString(),
+    };
+  },
+
   async acceptTerms(version) {
     await delay(120);
     const user = state.user ?? DEMO_USER;
