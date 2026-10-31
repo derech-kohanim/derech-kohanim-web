@@ -45,6 +45,13 @@ import {
   StreetPill,
   useLongPress,
 } from '@/navigation/DriveHud';
+import {
+  isOverLimit,
+  SPEEDING_ALERT_MARGIN_KMH,
+  SPEEDING_MARGIN_KMH,
+  Speedometer,
+  speedLimitAt,
+} from '@/navigation/Speedometer';
 import { StepList } from '@/navigation/StepList';
 import { AlertThrottle } from '@/navigation/tripwire';
 import { useNavigationRun } from '@/navigation/useNavigationRun';
@@ -83,6 +90,8 @@ const ZONE_AHEAD_REPEAT_MS = 120_000;
 const RETURN_TO_ROUTE_REPEAT_MS = 30_000;
 /** A GPS loss is announced at most this often, so a flapping signal does not nag. */
 const GPS_ALERT_REPEAT_MS = 60_000;
+/** While well over the limit, repeat the speeding alert at most this often. */
+const SPEEDING_REPEAT_MS = 60_000;
 
 /**
  * Good/bad end-of-trip rating. A thumbs-down reveals an optional free-text field so the driver
@@ -437,11 +446,23 @@ export function Navigation() {
     toast.show(t('navigation.reportSent'), 'success');
   }
 
+  // The limit comes from the route (the engine's road data), not from the basemap, so it works
+  // the same over the Google map.
+  const liveSpeedKmh = Math.round(run.speedMps * 3.6);
+  const limitKmh = speedLimitAt(route?.speedLimits, run.routeVertexIndex)?.kmh ?? null;
+  const speeding = isOverLimit(liveSpeedKmh, limitKmh, SPEEDING_MARGIN_KMH);
+  const speedingBadly = isOverLimit(liveSpeedKmh, limitKmh, SPEEDING_ALERT_MARGIN_KMH);
+  useEffect(() => {
+    if (!speedingBadly || limitKmh === null) return;
+    speakAlert('speeding', 'speeding', SPEEDING_REPEAT_MS, { limitKmh });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speedingBadly, limitKmh]);
+
   if (!route) return null;
 
   const Icon = maneuverIcon(maneuver?.action ?? 'continue');
   const zoneActive = run.zoneAlert !== null;
-  const speedKmh = Math.round(run.speedMps * 3.6);
+  const speedKmh = liveSpeedKmh;
 
   return (
     <div className={styles.navRoot}>
@@ -556,12 +577,11 @@ export function Navigation() {
 
         <StreetPill street={currentStep?.street ?? null} roadRef={currentStep?.roadRef ?? null} />
 
-        {speedKmh > 0 && (
+        {speeding && <div className={navStyles.speedingFrame} aria-hidden />}
+
+        {(speedKmh > 0 || limitKmh !== null) && (
           <div className={navStyles.navSpeedo}>
-            <div className={navStyles.speedo}>
-              <span className={navStyles.speedoValue}>{speedKmh}</span>
-              <span className={navStyles.speedoUnit}>{t('navigation.speedUnit')}</span>
-            </div>
+            <Speedometer speedKmh={speedKmh} limitKmh={limitKmh} />
           </div>
         )}
       </div>

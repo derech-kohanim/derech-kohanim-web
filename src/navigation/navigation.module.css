@@ -168,7 +168,14 @@
   font-variant-numeric: tabular-nums;
 }
 
+.speedCluster {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .speedo {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -178,6 +185,66 @@
   border-radius: var(--radius-full);
   background: hsl(var(--color-surface-overlay));
   box-shadow: var(--elevation-lg);
+}
+
+/* The ring fills clockwise from the top towards 120 km/h. */
+.speedoRing {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+
+.speedoTrack {
+  fill: none;
+  stroke: hsl(var(--color-border));
+  stroke-width: 4;
+}
+
+.speedoFill {
+  fill: none;
+  stroke: hsl(var(--color-primary));
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dashoffset var(--duration-normal) linear;
+}
+
+.speedo[data-over='true'] .speedoFill {
+  stroke: hsl(var(--color-danger));
+}
+
+.speedo[data-over='true'] .speedoValue {
+  color: hsl(var(--color-danger));
+}
+
+/* Road-sign style limit: a white disc with a red rim. Fixed sign colours on purpose, the same
+   in light and dark themes, so it reads as the real sign. */
+.limitSign {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--space-12);
+  block-size: var(--space-12);
+  border-radius: var(--radius-full);
+  border: 5px solid hsl(var(--color-danger));
+  background: #fff;
+  color: #111;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  box-shadow: var(--elevation-lg);
+}
+
+/* A red frame around the map while speeding, seen in peripheral vision. */
+.speedingFrame {
+  position: absolute;
+  inset: 0;
+  border: 6px solid hsl(var(--color-danger));
+  pointer-events: none;
+  z-index: 4;
 }
 
 .speedoValue {

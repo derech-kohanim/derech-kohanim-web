@@ -314,7 +314,8 @@
     "lanes": "נתיבי נסיעה",
     "repeatInstruction": "השמעה חוזרת של ההנחיה",
     "road": "כביש {{ref}}",
-    "voiceLongPress": "לחיצה ארוכה פותחת את הגדרות הקול"
+    "voiceLongPress": "לחיצה ארוכה פותחת את הגדרות הקול",
+    "speedLimit": "המהירות המותרת {{limit}} קמ\"ש"
   },
   "events": {
     "zone": "אזור אסור",

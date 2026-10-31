@@ -280,7 +280,8 @@
     "lanes": "Lanes",
     "repeatInstruction": "Repeat the instruction",
     "road": "Road {{ref}}",
-    "voiceLongPress": "Long press opens the voice settings"
+    "voiceLongPress": "Long press opens the voice settings",
+    "speedLimit": "Speed limit {{limit}} km/h"
   },
   "events": {
     "zone": "Forbidden zone",
