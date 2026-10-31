@@ -214,7 +214,7 @@
     "alert": {
       "speed_camera": "speed camera ahead",
       "rail_crossing": "railway crossing ahead",
-      "speeding": "the speed limit is {{limit}}"
+      "speeding": "attention, you are over the speed limit"
     },
     "misc": {
       "gps_lost": "GPS signal lost",
