@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { LatLng, NavFeedbackRating } from '@dk/shared';
 import {
+  ArrowUp,
   ChevronDown,
   ListOrdered,
   OctagonAlert,
@@ -44,7 +45,13 @@ import { useRouteEventBundle } from '@/navigation/useRouteEventBundle';
 import { useRouteEvents } from '@/navigation/useRouteEvents';
 import { usePreferences } from '@/state/PreferencesProvider';
 import { useTrip } from '@/state/TripProvider';
-import { assembleManeuverPhrase, assembleReroutePhrase, assembleZonePhrase } from '@/voice/phrase';
+import {
+  assembleAlertPhrase,
+  assembleManeuverPhrase,
+  assembleReroutePhrase,
+  assembleZonePhrase,
+  type AlertPhraseKind,
+} from '@/voice/phrase';
 import { voiceEngine } from '@/voice/VoiceEngine';
 import { voiceGender, voiceTranslator } from '@/voice/voiceId';
 
@@ -64,6 +71,10 @@ const OVERVIEW_MOVING_MPS = 2;
 const ZONE_INSIDE_REPEAT_MS = 60_000;
 /** Re-announce an approaching zone only after this long, e.g. after leaving and re-approaching. */
 const ZONE_AHEAD_REPEAT_MS = 120_000;
+/** While off route with no connection, repeat "return to the route" this often. */
+const RETURN_TO_ROUTE_REPEAT_MS = 30_000;
+/** A GPS loss is announced at most this often, so a flapping signal does not nag. */
+const GPS_ALERT_REPEAT_MS = 60_000;
 
 /**
  * Good/bad end-of-trip rating. A thumbs-down reveals an optional free-text field so the driver
@@ -149,6 +160,22 @@ export function Navigation() {
   );
   /** Per-situation repeat limits for every spoken alert on this screen. */
   const alertThrottle = useRef(new AlertThrottle());
+
+  /** Speaks a one-clip road or status alert, at most once per `intervalMs` for its key. */
+  function speakAlert(
+    kind: AlertPhraseKind,
+    key: string,
+    intervalMs: number,
+    options: { limitKmh?: number } = {},
+  ) {
+    if (!alertThrottle.current.shouldFire(key, intervalMs)) return;
+    voiceEngine.announce({
+      id: `${key}-${Date.now()}`,
+      groupId: `alert-${kind}`,
+      phrase: assembleAlertPhrase(kind, vt, options),
+      priority: 'zone',
+    });
+  }
   const online = useConnectivity();
   const [recalculating, setRecalculating] = useState(false);
 
@@ -276,11 +303,11 @@ export function Navigation() {
     voiceEngine.dropStale(maneuver?.id ?? null);
   }, [run.currentManeuverIndex, maneuver]);
 
-  // Off-route: online, recompute from the live position and announce it; offline, do nothing and
-  // keep the route plus the live marker on screen so the driver can steer back manually.
+  // Off-route: online, recompute from the live position and announce it. Offline there is no
+  // way to recompute, so the driver is guided back to the route instead (below), and the
+  // recompute runs as soon as the connection returns if the vehicle is still off route.
   useEffect(() => {
-    if (!run.offRoute || recalculating) return;
-    if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+    if (!run.offRoute || recalculating || !online) return;
     const from = run.position ?? destination?.location ?? null;
     if (!from) return;
     setRecalculating(true);
@@ -291,10 +318,42 @@ export function Navigation() {
       priority: 'zone',
     });
     void recomputeFrom(from).finally(() => setRecalculating(false));
-    // Intentionally keyed only on the off-route flag: the guard above prevents re-entry while a
-    // recompute is in flight, and a fresh route clears the flag in the run hook.
+    // Intentionally keyed only on the off-route flag and connectivity: the guard above prevents
+    // re-entry while a recompute is in flight, and a fresh route clears the flag in the run hook.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [run.offRoute]);
+  }, [run.offRoute, online]);
+
+  // Offline and off route: point back to the nearest part of the route and say so, repeating
+  // at a steady pace; when the vehicle rejoins, confirm it once.
+  const returning = !simulated && run.offRoute && !online && run.rejoin !== null;
+  const wasReturning = useRef(false);
+  useEffect(() => {
+    if (returning) {
+      wasReturning.current = true;
+      speakAlert('return_to_route', 'return_to_route', RETURN_TO_ROUTE_REPEAT_MS);
+      return;
+    }
+    if (wasReturning.current && !run.offRoute) {
+      wasReturning.current = false;
+      alertThrottle.current.reset('return_to_route');
+      speakAlert('back_on_route', 'back_on_route', 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [returning, run.offRoute, run.rejoin?.distanceMeters]);
+
+  // GPS lost and restored, spoken for a real drive only. The restore is said only after a loss.
+  const gpsLost = !simulated && run.gpsLost;
+  const hadGpsLoss = useRef(false);
+  useEffect(() => {
+    if (gpsLost) {
+      hadGpsLoss.current = true;
+      speakAlert('gps_lost', 'gps_lost', GPS_ALERT_REPEAT_MS);
+    } else if (hadGpsLoss.current) {
+      hadGpsLoss.current = false;
+      speakAlert('gps_recovered', 'gps_recovered', 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gpsLost]);
 
   // Overview is a glance, not a mode: if the driver frames the whole route while actually under
   // way, snap back to follow after a short beat so guidance resumes on its own. When stopped
@@ -363,12 +422,26 @@ export function Navigation() {
         aria-label={t('navigation.allSteps')}
       >
         <span className={styles.navBannerIcon}>
-          {zoneActive ? <OctagonAlert size={44} aria-hidden /> : <Icon size={44} aria-hidden />}
+          {zoneActive ? (
+            <OctagonAlert size={44} aria-hidden />
+          ) : returning ? (
+            <ArrowUp
+              size={44}
+              aria-hidden
+              style={{ transform: `rotate(${(run.rejoin!.bearingDegrees - run.heading).toFixed(0)}deg)` }}
+            />
+          ) : (
+            <Icon size={44} aria-hidden />
+          )}
         </span>
         <span className={styles.navBannerText}>
           <span className={styles.navDistance}>
             {formatDistance(
-              zoneActive ? run.zoneAlert!.distanceMeters : run.distanceToManeuverMeters,
+              zoneActive
+                ? run.zoneAlert!.distanceMeters
+                : returning
+                  ? run.rejoin!.distanceMeters
+                  : run.distanceToManeuverMeters,
               language,
             )}
           </span>
@@ -377,9 +450,11 @@ export function Navigation() {
               ? t(run.zoneAlert!.inside ? 'navigation.insideZone' : 'maneuver.zone_enter', {
                   zone: language === 'he' ? run.zoneAlert!.zone.nameHe : run.zoneAlert!.zone.name,
                 })
-              : recalculating
-                ? t('navigation.recalculating')
-                : instruction}
+              : returning
+                ? t('navigation.returnToRoute')
+                : recalculating
+                  ? t('navigation.recalculating')
+                  : instruction}
           </span>
         </span>
         <ChevronDown size={22} aria-hidden className={styles.navBannerChevron} />

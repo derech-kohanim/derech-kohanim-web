@@ -275,7 +275,8 @@
     "feedbackBad": "Bad",
     "feedbackProblemPlaceholder": "What was the problem?",
     "feedbackThanks": "Thanks for the feedback",
-    "feedbackFailed": "Could not send feedback"
+    "feedbackFailed": "Could not send feedback",
+    "returnToRoute": "Return to the route"
   },
   "events": {
     "zone": "Forbidden zone",

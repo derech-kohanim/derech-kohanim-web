@@ -1,4 +1,9 @@
-import type { DangerZoneCollection, RouteResult, ZoneCollection } from '@dk/shared';
+import type {
+  DangerZoneCollection,
+  RouteEventBundle,
+  RouteResult,
+  ZoneCollection,
+} from '@dk/shared';
 
 /**
  * Best-effort offline cache for the active-navigation data (route + zone layers + voice audio),
@@ -27,6 +32,11 @@ export interface RouteBundle {
   zones: ZoneCollection | null;
   dangerZones: DangerZoneCollection | null;
   voice: CachedVoiceClip[];
+  /**
+   * The route's event feed (zones, speed cameras, rail crossings) as last served, so the road
+   * alerts keep working when the connection drops mid-drive.
+   */
+  events?: RouteEventBundle | null;
   savedAt: number;
 }
 
@@ -110,4 +120,14 @@ export function getActiveRouteId(): string | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Stores the event feed on an already cached route bundle. A route that was never bundled
+ * (prep not finished) is left alone: the feed alone cannot drive a route offline.
+ */
+export async function putRouteEvents(routeId: string, events: RouteEventBundle): Promise<void> {
+  const bundle = await getRouteBundle(routeId);
+  if (!bundle) return;
+  await putRouteBundle({ ...bundle, events });
 }

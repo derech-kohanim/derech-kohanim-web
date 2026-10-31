@@ -54,6 +54,11 @@ export interface NavigationRunState {
   routeVertexIndex: number;
   /** True when the device has drifted off the route (real driving only). */
   offRoute: boolean;
+  /**
+   * While off route: where the nearest point of the route is, from the live position. Drives
+   * the "return to route" guidance when there is no connection to recompute.
+   */
+  rejoin: { distanceMeters: number; bearingDegrees: number } | null;
   /** True when the geolocation watch errored, or no fresh fix arrived within ~10s (real only). */
   gpsLost: boolean;
   /** Fraction of the route already driven, for the simulation scrubber. */
@@ -140,6 +145,10 @@ export function useNavigationRun(
   const [status, setStatus] = useState<NavigationStatus>('idle');
   const [rawPosition, setRawPosition] = useState<LatLng | null>(null);
   const [offRoute, setOffRoute] = useState(false);
+  /** Nearest route vertex to the last real fix, for the rejoin guidance. */
+  const [nearestVertex, setNearestVertex] = useState<{ index: number; distance: number } | null>(
+    null,
+  );
   const offRouteHits = useRef(0);
   const arrivedRef = useRef(false);
   const [gpsLost, setGpsLost] = useState(false);
@@ -193,6 +202,7 @@ export function useNavigationRun(
           }
         }
         setTravelled(cumulative[bestIndex]);
+        setNearestVertex({ index: bestIndex, distance: best });
 
         if (best > OFF_ROUTE_METERS) {
           offRouteHits.current += 1;
@@ -367,6 +377,16 @@ export function useNavigationRun(
     routeVertexIndex,
   ]);
 
+  const rejoin = useMemo(() => {
+    if (simulated || !offRoute || !rawPosition || !nearestVertex) return null;
+    const target = points[nearestVertex.index];
+    if (!target) return null;
+    return {
+      distanceMeters: Math.round(nearestVertex.distance),
+      bearingDegrees: bearingDegrees(rawPosition, target),
+    };
+  }, [simulated, offRoute, rawPosition, nearestVertex, points]);
+
   const simSpeed =
     simulated && !paused && !arrived ? totalMeters / Math.max(route?.durationSeconds ?? 1, 1) : 0;
 
@@ -385,6 +405,7 @@ export function useNavigationRun(
     zoneAlert,
     routeVertexIndex,
     offRoute,
+    rejoin,
     gpsLost,
     progress: totalMeters > 0 ? travelled / totalMeters : 0,
     paused,

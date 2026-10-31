@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { CreateReportRequest, RouteEvent, RouteEventBundle, RouteResult } from '@dk/shared';
 
 import { api } from '@/api';
+import { getRouteBundle, putRouteEvents } from '@/lib/offlineCache';
 
 import { mockEventsForRoute } from './events';
 
@@ -32,10 +33,15 @@ export function useRouteEventBundle(route: RouteResult | null): RouteEventFeed {
     void api
       .routeEvents(route.id)
       .then((served) => {
-        if (!cancelled) setBundle(served);
+        if (cancelled) return;
+        setBundle(served);
+        void putRouteEvents(route.id, served);
       })
-      .catch(() => {
-        if (!cancelled) setBundle(mockEventsForRoute(route));
+      .catch(async () => {
+        // Offline: the feed cached with the route keeps its cameras and crossings; only with no
+        // cache at all fall back to the zone markers derived from the route itself.
+        const cached = await getRouteBundle(route.id);
+        if (!cancelled) setBundle(cached?.events ?? mockEventsForRoute(route));
       });
     return () => {
       cancelled = true;

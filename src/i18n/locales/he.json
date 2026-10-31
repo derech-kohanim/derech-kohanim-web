@@ -309,7 +309,8 @@
     "feedbackBad": "לא טוב",
     "feedbackProblemPlaceholder": "מה הייתה הבעיה?",
     "feedbackThanks": "תודה על המשוב",
-    "feedbackFailed": "לא הצלחנו לשלוח את המשוב"
+    "feedbackFailed": "לא הצלחנו לשלוח את המשוב",
+    "returnToRoute": "חזרה אל המסלול"
   },
   "events": {
     "zone": "אזור אסור",
