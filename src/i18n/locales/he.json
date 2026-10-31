@@ -328,7 +328,10 @@
     "trafficDelay": "עומס מוסיף {{time}} לנסיעה",
     "trafficHeavy": "תנועה כבדה",
     "trafficModerate": "תנועה מתונה",
-    "onRoute": "אירועים בדרך"
+    "onRoute": "אירועים בדרך",
+    "speed_camera": "מצלמת מהירות",
+    "rail_crossing": "מפגש מסילת ברזל",
+    "railGuarded": "עם מחסום"
   },
   "settings": {
     "title": "הגדרות",

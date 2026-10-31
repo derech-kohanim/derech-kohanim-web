@@ -75,5 +75,11 @@ export function eventLabel(
   if (event.type === 'zone') {
     return (language === 'he' ? event.labelHe : event.label) ?? t('events.zone');
   }
+  if (event.type === 'speed_camera' && event.maxSpeedKmh) {
+    return `${t('events.speed_camera')} · ${event.maxSpeedKmh}`;
+  }
+  if (event.type === 'rail_crossing' && event.guarded) {
+    return `${t('events.rail_crossing')} · ${t('events.railGuarded')}`;
+  }
   return t(`events.${event.type}`);
 }

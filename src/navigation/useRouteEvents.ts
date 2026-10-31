@@ -1,9 +1,22 @@
 import { useMemo } from 'react';
 
-import type { RouteEvent } from './events';
+import type { RouteEvent, RouteEventType } from './events';
 
+/** Default approach window, along the route. */
 const APPROACH_METERS = 500;
+/**
+ * Per-type approach windows. A speed camera is announced early enough to slow down; a level
+ * crossing matters closer in.
+ */
+const APPROACH_METERS_BY_TYPE: Partial<Record<RouteEventType, number>> = {
+  speed_camera: 500,
+  rail_crossing: 300,
+};
 const PASSED_MARGIN = 40;
+
+export function approachWindowMeters(type: RouteEventType): number {
+  return APPROACH_METERS_BY_TYPE[type] ?? APPROACH_METERS;
+}
 
 export interface ApproachingEvent {
   event: RouteEvent;
@@ -30,8 +43,11 @@ export function useRouteEvents(events: RouteEvent[], travelledMeters: number): R
       .sort((a, b) => a.distanceMeters - b.distanceMeters);
 
     const approaching =
-      upcoming.find((item) => item.distanceMeters <= APPROACH_METERS && item.distanceMeters >= -PASSED_MARGIN) ??
-      null;
+      upcoming.find(
+        (item) =>
+          item.distanceMeters <= approachWindowMeters(item.event.type) &&
+          item.distanceMeters >= -PASSED_MARGIN,
+      ) ?? null;
 
     return { upcoming: upcoming.map((item) => item.event), approaching };
   }, [events, travelledMeters]);

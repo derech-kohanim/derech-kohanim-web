@@ -294,7 +294,10 @@
     "trafficDelay": "Traffic adds {{time}} to the drive",
     "trafficHeavy": "Heavy traffic",
     "trafficModerate": "Moderate traffic",
-    "onRoute": "Events on the route"
+    "onRoute": "Events on the route",
+    "speed_camera": "Speed camera",
+    "rail_crossing": "Railway crossing",
+    "railGuarded": "with barrier"
   },
   "settings": {
     "title": "Settings",

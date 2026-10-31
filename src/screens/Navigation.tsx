@@ -92,6 +92,8 @@ const RETURN_TO_ROUTE_REPEAT_MS = 30_000;
 const GPS_ALERT_REPEAT_MS = 60_000;
 /** While well over the limit, repeat the speeding alert at most this often. */
 const SPEEDING_REPEAT_MS = 60_000;
+/** A road alert (camera, crossing) is spoken once per event; this only guards a re-render storm. */
+const ROAD_ALERT_REPEAT_MS = 10 * 60_000;
 
 /**
  * Good/bad end-of-trip rating. A thumbs-down reveals an optional free-text field so the driver
@@ -445,6 +447,22 @@ export function Navigation() {
     void submitReport({ routeId: route.id, type, location }, run.travelledMeters + 1);
     toast.show(t('navigation.reportSent'), 'success');
   }
+
+  // Speed cameras and rail crossings: spoken once as each comes within its approach window.
+  const approachingRoadAlert =
+    approaching &&
+    (approaching.event.type === 'speed_camera' || approaching.event.type === 'rail_crossing')
+      ? approaching.event
+      : null;
+  useEffect(() => {
+    if (!approachingRoadAlert) return;
+    speakAlert(
+      approachingRoadAlert.type === 'speed_camera' ? 'speed_camera' : 'rail_crossing',
+      `event-${approachingRoadAlert.id}`,
+      ROAD_ALERT_REPEAT_MS,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [approachingRoadAlert?.id]);
 
   // The limit comes from the route (the engine's road data), not from the basemap, so it works
   // the same over the Google map.
