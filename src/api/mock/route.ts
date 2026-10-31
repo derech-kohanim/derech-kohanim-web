@@ -1,10 +1,12 @@
 import type {
+  Lane,
   LatLng,
   ManeuverZone,
   RoutePlan,
   RouteRequest,
   RouteResult,
   Maneuver,
+  SpeedLimitSegment,
   ZoneProperties,
 } from '@dk/shared';
 
@@ -33,6 +35,46 @@ const ACTIONS = [
   'turn_right',
   'arrive',
 ];
+
+/** Road numbers for the mock steps, so the street pill shows a "road N" prefix on some. */
+const ROAD_REFS: (string | null)[] = [null, '4', null, '1', null, null, '443', null];
+
+/**
+ * Lane layouts at the approach to a turn, left to right, with the lanes that make the turn
+ * marked valid. Only turns get lanes, the way real `turn:lanes` data is sparse.
+ */
+function mockLanes(action: string): Lane[] | undefined {
+  if (action === 'turn_right') {
+    return [
+      { indications: ['left'], valid: false },
+      { indications: ['through'], valid: false },
+      { indications: ['through', 'right'], valid: true },
+      { indications: ['right'], valid: true },
+    ];
+  }
+  if (action === 'turn_left') {
+    return [
+      { indications: ['left'], valid: true },
+      { indications: ['left', 'through'], valid: true },
+      { indications: ['through'], valid: false },
+    ];
+  }
+  return undefined;
+}
+
+/**
+ * Speed limits covering the whole geometry: a built-up stretch at the urban default, an
+ * estimated interurban stretch, a signed highway stretch, and a signed urban exit.
+ */
+function mockSpeedLimits(vertexCount: number): SpeedLimitSegment[] {
+  const at = (fraction: number) => Math.round((vertexCount - 1) * fraction);
+  return [
+    { fromIndex: 0, toIndex: at(0.2), kmh: 50, source: 'urban_default', urban: true },
+    { fromIndex: at(0.2), toIndex: at(0.45), kmh: 90, source: 'estimated', urban: false },
+    { fromIndex: at(0.45), toIndex: at(0.8), kmh: 110, source: 'sign', urban: false },
+    { fromIndex: at(0.8), toIndex: vertexCount - 1, kmh: 50, source: 'sign', urban: true },
+  ];
+}
 
 /** Bends the straight line so the drawn route reads like a real detour. */
 function buildGeometry(origin: LatLng, destination: LatLng, bend: number): LatLng[] {
@@ -84,7 +126,15 @@ function buildManeuvers(
       distanceMeters: Math.round(totalMeters / count),
       geometryIndex,
       street,
-      voiceKeys: [`prefix.in`, `dist.200m`, `action.${action}`],
+      roadRef: ROAD_REFS[index] ?? null,
+      ...(action === 'roundabout' ? { exitNumber: 2 } : {}),
+      ...(mockLanes(action) ? { lanes: mockLanes(action) } : {}),
+      voiceKeys: [
+        `prefix.in`,
+        `dist.200m`,
+        `action.${action}`,
+        ...(action === 'roundabout' ? ['exit.2'] : []),
+      ],
     });
   }
 
@@ -125,6 +175,14 @@ const REQUIRED_VOICE_KEYS = [
   'action.arrive',
   'zone.enter',
   'zone.exit',
+  'exit.2',
+  'alert.speed_camera',
+  'alert.rail_crossing',
+  'alert.speeding',
+  'misc.gps_lost',
+  'misc.gps_recovered',
+  'misc.back_on_route',
+  'misc.return_to_route',
 ];
 
 interface Variant {
@@ -172,6 +230,7 @@ function buildRoute(request: RouteRequest, variant: Variant, options: BuildOptio
     label: options.label,
     detourRatio: Number((meters / Math.max(direct, 1)).toFixed(2)),
     requiredVoiceKeys: REQUIRED_VOICE_KEYS,
+    speedLimits: mockSpeedLimits(points.length),
     debug: {
       naiveGeometry: {
         type: 'LineString',

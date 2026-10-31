@@ -443,7 +443,12 @@ export const mockClient: ApiClient = {
     const bundle = route
       ? mockEventsForRoute(route)
       : { routeId, events: [], traffic: [], delaySeconds: 0 };
-    return { ...bundle, routeId, events: [...bundle.events, ...(REPORTS.get(routeId) ?? [])] };
+    const roadAlerts = route ? mockRoadAlerts(route) : [];
+    return {
+      ...bundle,
+      routeId,
+      events: [...bundle.events, ...roadAlerts, ...(REPORTS.get(routeId) ?? [])],
+    };
   },
 
   async createReport(body) {
@@ -570,3 +575,37 @@ Every route is verified against the zone layers before it is shown. A route that
 Location data is used for navigation only. Routes are computed by an external routing provider.
 
 Safe and lawful driving remains the responsibility of the driver.`;
+
+/**
+ * A speed camera and a level crossing along the route, as the server derives them from
+ * OpenStreetMap, so the approach cards and their voice alerts are demoable in mock mode. Kept
+ * here rather than in `mockEventsForRoute`, which is also the real client's offline fallback
+ * and must never invent road furniture.
+ */
+function mockRoadAlerts(route: RouteResult): RouteEvent[] {
+  const points = toLatLngs(route.geometry.coordinates);
+  if (points.length < 2) return [];
+  const totals = [0];
+  for (let index = 1; index < points.length; index += 1) {
+    totals.push(totals[index - 1] + distanceMeters(points[index - 1], points[index]));
+  }
+  const at = (fraction: number) => Math.round((points.length - 1) * fraction);
+  const camera = at(0.35);
+  const crossing = at(0.7);
+  return [
+    {
+      id: `camera-${route.id}`,
+      type: 'speed_camera',
+      location: points[camera],
+      routeDistanceMeters: totals[camera],
+      maxSpeedKmh: 90,
+    },
+    {
+      id: `crossing-${route.id}`,
+      type: 'rail_crossing',
+      location: points[crossing],
+      routeDistanceMeters: totals[crossing],
+      guarded: true,
+    },
+  ];
+}

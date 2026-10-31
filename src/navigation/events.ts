@@ -15,6 +15,8 @@ export const EVENT_EMOJI: Record<RouteEventType, string> = {
   accident: '💥',
   hazard: '⚠️',
   closure: '⛔',
+  speed_camera: '📷',
+  rail_crossing: '🚆',
 };
 
 function cumulative(points: LatLng[]): number[] {

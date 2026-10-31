@@ -1,4 +1,4 @@
-import { AlertTriangle, Ban, Car, ShieldAlert, Turtle } from 'lucide-react';
+import { AlertTriangle, Ban, Camera, Car, ShieldAlert, TrainFront, Turtle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Sheet } from '@/components/ui';
@@ -13,6 +13,9 @@ const REPORT_ICON: Record<RouteEventType, typeof AlertTriangle> = {
   closure: Ban,
   traffic: Turtle,
   zone: AlertTriangle,
+  // Map-derived, never offered in the picker (REPORT_TYPES), but the record is exhaustive.
+  speed_camera: Camera,
+  rail_crossing: TrainFront,
 };
 
 export interface ReportSheetProps {
