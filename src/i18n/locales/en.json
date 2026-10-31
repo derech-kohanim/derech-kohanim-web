@@ -194,7 +194,33 @@
       "fork_right": "At the fork, keep right",
       "fork_left": "At the fork, keep left",
       "merge": "Merge",
-      "uturn": "Make a U turn"
+      "uturn": "Make a U turn",
+      "slight_right": "bear right",
+      "slight_left": "bear left",
+      "sharp_right": "turn sharply right",
+      "sharp_left": "turn sharply left",
+      "roundabout_enter": "enter the roundabout"
+    },
+    "exit": {
+      "1": "take the first exit",
+      "2": "take the second exit",
+      "3": "take the third exit",
+      "4": "take the fourth exit",
+      "5": "take the fifth exit",
+      "6": "take the sixth exit",
+      "7": "take the seventh exit",
+      "8": "take the eighth exit"
+    },
+    "alert": {
+      "speed_camera": "speed camera ahead",
+      "rail_crossing": "railway crossing ahead",
+      "speeding": "the speed limit is {{limit}}"
+    },
+    "misc": {
+      "gps_lost": "GPS signal lost",
+      "gps_recovered": "GPS signal restored",
+      "back_on_route": "you are back on the route",
+      "return_to_route": "return to the route"
     }
   },
   "maneuver": {
@@ -287,7 +313,11 @@
     "loginPrompt": "Signing in keeps your preferences across devices",
     "savedPlaces": "Saved places",
     "mockBanner": "Demo mode, all data is local",
-    "legal": "Policies and information"
+    "legal": "Policies and information",
+    "voiceMale": "Male voice",
+    "voiceFemale": "Female voice",
+    "voiceIdDescription": "Hebrew instructions are phrased to match the voice",
+    "voiceTitle": "Voice settings"
   },
   "legal": {
     "termsTitle": "Terms of use",

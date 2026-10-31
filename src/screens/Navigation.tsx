@@ -46,6 +46,7 @@ import { usePreferences } from '@/state/PreferencesProvider';
 import { useTrip } from '@/state/TripProvider';
 import { assembleManeuverPhrase, assembleReroutePhrase, assembleZonePhrase } from '@/voice/phrase';
 import { voiceEngine } from '@/voice/VoiceEngine';
+import { voiceGender, voiceTranslator } from '@/voice/voiceId';
 
 import navStyles from '@/navigation/navigation.module.css';
 import styles from './screens.module.css';
@@ -141,6 +142,11 @@ export function Navigation() {
     [zones, dangerZones, preferences.avoidDangerZones],
   );
   const run = useNavigationRun(route, simulated, tripwireZones);
+  // Spoken texts follow the voice's gender; the screen keeps using plain `t`.
+  const vt = useMemo(
+    () => voiceTranslator(t, voiceGender(preferences.voiceId)),
+    [t, preferences.voiceId],
+  );
   /** Per-situation repeat limits for every spoken alert on this screen. */
   const alertThrottle = useRef(new AlertThrottle());
   const online = useConnectivity();
@@ -238,12 +244,12 @@ export function Navigation() {
     voiceEngine.announce({
       id: `${zoneAlertKey}-${Date.now()}`,
       groupId: `zone-${zoneName}`,
-      phrase: assembleZonePhrase(zoneName, !run.zoneAlert.inside, t),
+      phrase: assembleZonePhrase(zoneName, !run.zoneAlert.inside, vt),
       priority: 'zone',
     });
     // Keyed on the situation, not on the countdown distance.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zoneAlertKey, language, t]);
+  }, [zoneAlertKey, language, vt]);
 
   // The spoken instruction is assembled from the manoeuvre fields, independent of the banner,
   // and fires once per ladder rung as the distance counts down.
@@ -254,7 +260,7 @@ export function Navigation() {
       maneuver,
       run.distanceToManeuverMeters,
       language,
-      t,
+      vt,
     );
     voiceEngine.announce({
       id: `${maneuver.id}-${rung}`,
@@ -262,7 +268,7 @@ export function Navigation() {
       phrase,
       priority: 'maneuver',
     });
-  }, [maneuver, run.distanceToManeuverMeters, run.status, language, t]);
+  }, [maneuver, run.distanceToManeuverMeters, run.status, language, vt]);
 
   // As soon as the vehicle passes a manoeuvre, flush any instruction still being spoken for a
   // manoeuvre already behind us, so fast progress cannot leave the voice lagging.
@@ -281,7 +287,7 @@ export function Navigation() {
     voiceEngine.announce({
       id: `reroute-${Date.now()}`,
       groupId: 'reroute',
-      phrase: assembleReroutePhrase(t),
+      phrase: assembleReroutePhrase(vt),
       priority: 'zone',
     });
     void recomputeFrom(from).finally(() => setRecalculating(false));

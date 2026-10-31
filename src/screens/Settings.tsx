@@ -8,6 +8,7 @@ import { Button, Card, CardTitle, ListItem, Select, Switch } from '@/components/
 import { env } from '@/env';
 import { useAuth } from '@/state/AuthProvider';
 import { usePreferences } from '@/state/PreferencesProvider';
+import { VoiceSettings } from '@/voice/VoiceSettings';
 
 import styles from './screens.module.css';
 
@@ -93,12 +94,7 @@ export function Settings() {
             label={t('settings.dangerZones')}
             description={t('settings.dangerZonesDescription')}
           />
-          <Switch
-            checked={preferences.voiceEnabled}
-            onCheckedChange={(voiceEnabled) => update({ voiceEnabled })}
-            label={t('settings.voice')}
-            description={t('settings.voiceDescription')}
-          />
+          <VoiceSettings />
         </Card>
 
         <Card>

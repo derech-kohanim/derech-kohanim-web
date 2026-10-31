@@ -4,6 +4,7 @@ import { currentLanguage } from '@/i18n';
 import { putRouteBundle, setActiveRouteId, type CachedVoiceClip } from '@/lib/offlineCache';
 import { usePreferences } from '@/state/PreferencesProvider';
 import { useTrip } from '@/state/TripProvider';
+import { ALERT_CLIP_KEYS } from '@/voice/phrase';
 import { voiceEngine } from '@/voice/VoiceEngine';
 
 export type NavPrepStatus = 'idle' | 'preparing' | 'ready';
@@ -35,7 +36,10 @@ export function useNavPrep(): { status: NavPrepStatus; ready: boolean } {
     void (async () => {
       let voice: CachedVoiceClip[] = [];
       if (preferences.voiceEnabled && route.requiredVoiceKeys.length > 0) {
-        voice = await voiceEngine.prepare(route.requiredVoiceKeys, language, preferences.voiceId);
+        // Alert and status clips are not tied to a manoeuvre, so they are fetched with every
+        // route; the set is small and makes the alerts speak in the recorded voice offline.
+        const keys = [...new Set([...route.requiredVoiceKeys, ...ALERT_CLIP_KEYS])];
+        voice = await voiceEngine.prepare(keys, language, preferences.voiceId);
       }
       // Persist for reload/offline restore. Best-effort: a failed write never blocks readiness.
       await putRouteBundle({

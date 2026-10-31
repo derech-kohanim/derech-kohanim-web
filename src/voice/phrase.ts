@@ -1,5 +1,5 @@
 import type { Language, Maneuver } from '@dk/shared';
-import { DISTANCE_LADDER_METERS } from '@dk/shared';
+import { DISTANCE_LADDER_METERS, ROUNDABOUT_EXIT_KEYS_MAX } from '@dk/shared';
 
 import { cleanInstruction, type Translate } from '@/lib/maneuver';
 
@@ -46,7 +46,25 @@ function distanceClause(rung: number, t: Translate): { text: string; keys: strin
   };
 }
 
-const SELF_CONTAINED = ['roundabout', 'roundabout_exit', 'arrive', 'depart', 'merge', 'uturn'];
+const SELF_CONTAINED = [
+  'roundabout',
+  'roundabout_enter',
+  'roundabout_exit',
+  'arrive',
+  'depart',
+  'merge',
+  'uturn',
+];
+
+/**
+ * The roundabout exit ordinal ("ביציאה השלישית"), spoken after entering the roundabout. Only
+ * the first eight exits have a clip; a larger number is left to the provider's own prose.
+ */
+function exitClause(maneuver: Maneuver, t: Translate): { text: string; keys: string[] } | null {
+  const exit = maneuver.exitNumber;
+  if (!exit || exit < 1 || exit > ROUNDABOUT_EXIT_KEYS_MAX) return null;
+  return { text: t(`voice.exit.${exit}`), keys: [`exit.${exit}`] };
+}
 
 function actionClause(
   maneuver: Maneuver,
@@ -63,6 +81,11 @@ function actionClause(
   if (translated === key) {
     const prose = maneuver.instruction ? cleanInstruction(maneuver.instruction) : t('voice.action.continue');
     return { text: prose, keys };
+  }
+
+  const exit = exitClause(maneuver, t);
+  if (exit) {
+    return { text: `${translated}, ${exit.text}`, keys: [...keys, PAUSE, ...exit.keys] };
   }
 
   const takesStreet = maneuver.street && !SELF_CONTAINED.includes(maneuver.action);
@@ -138,4 +161,44 @@ export function assembleZonePhrase(
     utterances: [text],
     text,
   };
+}
+
+/** Road and status alerts that have one clip each and no distance clause. */
+export type AlertPhraseKind =
+  | 'speed_camera'
+  | 'rail_crossing'
+  | 'speeding'
+  | 'gps_lost'
+  | 'gps_recovered'
+  | 'back_on_route'
+  | 'return_to_route';
+
+const ALERT_CLIP: Record<AlertPhraseKind, string> = {
+  speed_camera: 'alert.speed_camera',
+  rail_crossing: 'alert.rail_crossing',
+  speeding: 'alert.speeding',
+  gps_lost: 'misc.gps_lost',
+  gps_recovered: 'misc.gps_recovered',
+  back_on_route: 'misc.back_on_route',
+  return_to_route: 'misc.return_to_route',
+};
+
+/**
+ * Every alert clip. Not tied to a manoeuvre, so a route's `requiredVoiceKeys` may omit them;
+ * the navigation prep adds them so the alerts are ready offline too.
+ */
+export const ALERT_CLIP_KEYS: string[] = Object.values(ALERT_CLIP);
+
+/**
+ * A road or status alert. `speeding` carries the limit in the spoken fallback text; its clip
+ * says only "the speed limit is", since clips are a closed set and cannot hold the number.
+ */
+export function assembleAlertPhrase(
+  kind: AlertPhraseKind,
+  t: Translate,
+  options: { limitKmh?: number } = {},
+): AssembledPhrase {
+  const clip = ALERT_CLIP[kind];
+  const text = t(`voice.${clip}`, { limit: options.limitKmh ?? '' }).trim();
+  return { clipKeys: [clip], utterances: [text], text };
 }
