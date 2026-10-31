@@ -38,6 +38,13 @@ import { useVisibleZones } from '@/lib/useVisibleZones';
 import { referenceBounds } from '@/lib/zoneFilter';
 import { EVENT_EMOJI, eventLabel, type RouteEventType } from '@/navigation/events';
 import { ReportSheet } from '@/navigation/ReportSheet';
+import {
+  LANES_SHOW_WITHIN_METERS,
+  LaneRow,
+  SecondTurn,
+  StreetPill,
+  useLongPress,
+} from '@/navigation/DriveHud';
 import { StepList } from '@/navigation/StepList';
 import { AlertThrottle } from '@/navigation/tripwire';
 import { useNavigationRun } from '@/navigation/useNavigationRun';
@@ -54,6 +61,7 @@ import {
 } from '@/voice/phrase';
 import { voiceEngine } from '@/voice/VoiceEngine';
 import { voiceGender, voiceTranslator } from '@/voice/voiceId';
+import { VoiceSettings } from '@/voice/VoiceSettings';
 
 import navStyles from '@/navigation/navigation.module.css';
 import styles from './screens.module.css';
@@ -184,6 +192,9 @@ export function Navigation() {
   const [stepsOpen, setStepsOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
+  const [voiceDialogOpen, setVoiceDialogOpen] = useState(false);
+  // Mute: a short tap toggles the voice, a long press opens the voice settings.
+  const muteLongPress = useLongPress(() => setVoiceDialogOpen(true));
   const [feedbackRating, setFeedbackRating] = useState<NavFeedbackRating | null>(null);
   const [feedbackText, setFeedbackText] = useState('');
 
@@ -226,6 +237,8 @@ export function Navigation() {
   }, []);
 
   const maneuver = route?.maneuvers[run.currentManeuverIndex] ?? null;
+  // The step being driven now (the one before the upcoming manoeuvre), for the street pill.
+  const currentStep = route?.maneuvers[Math.max(0, run.currentManeuverIndex - 1)] ?? null;
   const next = route?.maneuvers[run.currentManeuverIndex + 1] ?? null;
 
   // Draw only the zones the driving camera is showing, so country-wide data stays performant while
@@ -296,6 +309,24 @@ export function Navigation() {
       priority: 'maneuver',
     });
   }, [maneuver, run.distanceToManeuverMeters, run.status, language, vt]);
+
+  /** Speaks the current instruction again on demand, at the live distance. */
+  function repeatInstruction() {
+    if (!maneuver) return;
+    voiceEngine.unlock();
+    const { phrase } = assembleManeuverPhrase(
+      maneuver,
+      run.distanceToManeuverMeters,
+      language,
+      vt,
+    );
+    voiceEngine.announce({
+      id: `repeat-${maneuver.id}-${Date.now()}`,
+      groupId: maneuver.id,
+      phrase,
+      priority: 'maneuver',
+    });
+  }
 
   // As soon as the vehicle passes a manoeuvre, flush any instruction still being spoken for a
   // manoeuvre already behind us, so fast progress cannot leave the voice lagging.
@@ -460,11 +491,17 @@ export function Navigation() {
         <ChevronDown size={22} aria-hidden className={styles.navBannerChevron} />
       </button>
 
-      {next && !zoneActive && (
-        <div className={styles.navThen}>
-          {t('navigation.then')}: {maneuverText(next, t, language)}
-        </div>
+      {next && !zoneActive && !returning && (
+        <SecondTurn next={next} language={language} onRepeat={repeatInstruction} />
       )}
+
+      {maneuver?.lanes &&
+        maneuver.lanes.length > 0 &&
+        !zoneActive &&
+        !returning &&
+        run.distanceToManeuverMeters <= LANES_SHOW_WITHIN_METERS && (
+          <LaneRow lanes={maneuver.lanes} />
+        )}
 
       {zoneActive && zoneReason && (
         <div className={`${styles.navThen} ${styles['navThen--zone']}`}>{zoneReason}</div>
@@ -516,6 +553,8 @@ export function Navigation() {
             setCamera((current) => ({ ...current, follow: overview }));
           }}
         />
+
+        <StreetPill street={currentStep?.street ?? null} roadRef={currentStep?.roadRef ?? null} />
 
         {speedKmh > 0 && (
           <div className={navStyles.navSpeedo}>
@@ -624,9 +663,19 @@ export function Navigation() {
           />
         )}
         <IconButton
-          label={preferences.voiceEnabled ? t('navigation.muteVoice') : t('navigation.unmuteVoice')}
+          label={`${
+            preferences.voiceEnabled ? t('navigation.muteVoice') : t('navigation.unmuteVoice')
+          }. ${t('navigation.voiceLongPress')}`}
           icon={preferences.voiceEnabled ? <Volume2 size={22} /> : <VolumeX size={22} />}
-          onClick={() => update({ voiceEnabled: !preferences.voiceEnabled })}
+          onPointerDown={muteLongPress.onPointerDown}
+          onPointerUp={muteLongPress.onPointerUp}
+          onPointerLeave={muteLongPress.onPointerLeave}
+          onPointerCancel={muteLongPress.onPointerCancel}
+          onContextMenu={muteLongPress.onContextMenu}
+          onClick={() => {
+            if (muteLongPress.consumeLongPress()) return;
+            update({ voiceEnabled: !preferences.voiceEnabled });
+          }}
         />
         <IconButton
           label={t('navigation.stop')}
@@ -645,6 +694,15 @@ export function Navigation() {
       {REPORTING_ENABLED && (
         <ReportSheet open={reportOpen} onClose={() => setReportOpen(false)} onReport={report} />
       )}
+
+      <Dialog
+        open={voiceDialogOpen}
+        onClose={() => setVoiceDialogOpen(false)}
+        title={t('settings.voiceTitle')}
+        actions={<Button onClick={() => setVoiceDialogOpen(false)}>{t('common.close')}</Button>}
+      >
+        <VoiceSettings />
+      </Dialog>
 
       <Dialog
         open={confirmEnd}

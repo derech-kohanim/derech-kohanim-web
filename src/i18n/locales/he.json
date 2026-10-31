@@ -310,7 +310,11 @@
     "feedbackProblemPlaceholder": "מה הייתה הבעיה?",
     "feedbackThanks": "תודה על המשוב",
     "feedbackFailed": "לא הצלחנו לשלוח את המשוב",
-    "returnToRoute": "חזרה אל המסלול"
+    "returnToRoute": "חזרה אל המסלול",
+    "lanes": "נתיבי נסיעה",
+    "repeatInstruction": "השמעה חוזרת של ההנחיה",
+    "road": "כביש {{ref}}",
+    "voiceLongPress": "לחיצה ארוכה פותחת את הגדרות הקול"
   },
   "events": {
     "zone": "אזור אסור",

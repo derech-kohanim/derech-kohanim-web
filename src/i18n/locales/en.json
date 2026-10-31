@@ -276,7 +276,11 @@
     "feedbackProblemPlaceholder": "What was the problem?",
     "feedbackThanks": "Thanks for the feedback",
     "feedbackFailed": "Could not send feedback",
-    "returnToRoute": "Return to the route"
+    "returnToRoute": "Return to the route",
+    "lanes": "Lanes",
+    "repeatInstruction": "Repeat the instruction",
+    "road": "Road {{ref}}",
+    "voiceLongPress": "Long press opens the voice settings"
   },
   "events": {
     "zone": "Forbidden zone",
