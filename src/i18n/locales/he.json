@@ -216,6 +216,7 @@
     "stop": "עצירת ניווט",
     "stopConfirm": "לעצור את הניווט",
     "recalculating": "מחשב מסלול מחדש",
+    "insideZone": "בתוך אזור {{zone}}",
     "arrivedTitle": "הגעת ליעד",
     "arrivedBody": "הניווט הסתיים. המסלול היה מאומת לכל אורכו.",
     "arrivedBodyUnverified": "הניווט הסתיים.",

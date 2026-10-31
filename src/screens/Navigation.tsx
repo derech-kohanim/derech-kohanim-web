@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { LatLng, NavFeedbackRating } from '@dk/shared';
 import {
   ChevronDown,
@@ -38,6 +38,7 @@ import { referenceBounds } from '@/lib/zoneFilter';
 import { EVENT_EMOJI, eventLabel, type RouteEventType } from '@/navigation/events';
 import { ReportSheet } from '@/navigation/ReportSheet';
 import { StepList } from '@/navigation/StepList';
+import { AlertThrottle } from '@/navigation/tripwire';
 import { useNavigationRun } from '@/navigation/useNavigationRun';
 import { useRouteEventBundle } from '@/navigation/useRouteEventBundle';
 import { useRouteEvents } from '@/navigation/useRouteEvents';
@@ -58,6 +59,10 @@ const REPORTING_ENABLED = false;
 const OVERVIEW_AUTO_RETURN_MS = 10_000;
 /** Above this speed (~7 km/h) the driver is under way, so overview should not linger. */
 const OVERVIEW_MOVING_MPS = 2;
+/** Repeat the "you are inside a zone" warning at most this often while it stays true. */
+const ZONE_INSIDE_REPEAT_MS = 60_000;
+/** Re-announce an approaching zone only after this long, e.g. after leaving and re-approaching. */
+const ZONE_AHEAD_REPEAT_MS = 120_000;
 
 /**
  * Good/bad end-of-trip rating. A thumbs-down reveals an optional free-text field so the driver
@@ -123,7 +128,21 @@ export function Navigation() {
 
   const { preferences, update } = usePreferences();
   const { route, zones, dangerZones, destination, recomputeFrom, hydrateFromCache } = useTrip();
-  const run = useNavigationRun(route, simulated);
+  // The local tripwire checks the full loaded layers, so it keeps alerting with no connection.
+  // Danger zones are included only while the driver asked to avoid them.
+  const tripwireZones = useMemo(
+    () =>
+      zones
+        ? {
+            zones: zones.features,
+            dangerZones: preferences.avoidDangerZones ? dangerZones?.features ?? [] : [],
+          }
+        : null,
+    [zones, dangerZones, preferences.avoidDangerZones],
+  );
+  const run = useNavigationRun(route, simulated, tripwireZones);
+  /** Per-situation repeat limits for every spoken alert on this screen. */
+  const alertThrottle = useRef(new AlertThrottle());
   const online = useConnectivity();
   const [recalculating, setRecalculating] = useState(false);
 
@@ -205,17 +224,26 @@ export function Navigation() {
     [camera, run.speedMps],
   );
 
-  // A zone warning outranks the driving instruction, on screen and in the ear.
+  // A zone warning outranks the driving instruction, on screen and in the ear. Being inside a
+  // zone repeats at a steady pace while it stays true; an approach is announced once per
+  // approach, so a slow crawl towards a zone does not repeat it on every tick.
+  const zoneAlertKey = run.zoneAlert
+    ? `${run.zoneAlert.inside ? 'inside' : 'ahead'}:${run.zoneAlert.zone.name}`
+    : null;
   useEffect(() => {
-    if (!run.zoneAlert) return;
+    if (!run.zoneAlert || !zoneAlertKey) return;
+    const interval = run.zoneAlert.inside ? ZONE_INSIDE_REPEAT_MS : ZONE_AHEAD_REPEAT_MS;
+    if (!alertThrottle.current.shouldFire(zoneAlertKey, interval)) return;
     const zoneName = language === 'he' ? run.zoneAlert.zone.nameHe : run.zoneAlert.zone.name;
     voiceEngine.announce({
-      id: `zone-${zoneName}`,
+      id: `${zoneAlertKey}-${Date.now()}`,
       groupId: `zone-${zoneName}`,
-      phrase: assembleZonePhrase(zoneName, true, t),
+      phrase: assembleZonePhrase(zoneName, !run.zoneAlert.inside, t),
       priority: 'zone',
     });
-  }, [run.zoneAlert, language, t]);
+    // Keyed on the situation, not on the countdown distance.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoneAlertKey, language, t]);
 
   // The spoken instruction is assembled from the manoeuvre fields, independent of the banner,
   // and fires once per ladder rung as the distance counts down.
@@ -340,7 +368,7 @@ export function Navigation() {
           </span>
           <span className={styles.navInstruction}>
             {zoneActive
-              ? t('maneuver.zone_enter', {
+              ? t(run.zoneAlert!.inside ? 'navigation.insideZone' : 'maneuver.zone_enter', {
                   zone: language === 'he' ? run.zoneAlert!.zone.nameHe : run.zoneAlert!.zone.name,
                 })
               : recalculating

@@ -216,6 +216,7 @@
     "stop": "Stop navigation",
     "stopConfirm": "Stop navigating",
     "recalculating": "Recalculating",
+    "insideZone": "Inside {{zone}}",
     "arrivedTitle": "You have arrived",
     "arrivedBody": "Navigation finished. The route was verified the whole way.",
     "arrivedBodyUnverified": "Navigation finished.",

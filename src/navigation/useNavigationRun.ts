@@ -1,7 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { LatLng, ManeuverZone, NavigationStatus, RouteResult } from '@dk/shared';
+import type {
+  DangerZoneFeature,
+  LatLng,
+  ManeuverZone,
+  NavigationStatus,
+  RouteResult,
+  ZoneFeature,
+} from '@dk/shared';
 
 import { bearingDegrees, distanceMeters, interpolate, toLatLngs } from '@/lib/geo';
+
+import { ZoneTripwire } from './tripwire';
 
 const TICK_MS = 200;
 /** Within this lead distance an upcoming forbidden zone raises the driving alert. */
@@ -15,6 +24,19 @@ const OFF_ROUTE_HITS = 2;
 /** No fresh GPS fix within this window (while navigating) counts as a lost signal. */
 const GPS_STALE_MS = 10_000;
 
+/** The zone layers the local tripwire checks against. */
+export interface TripwireZones {
+  zones: ZoneFeature[];
+  dangerZones: DangerZoneFeature[];
+}
+
+export interface ZoneAlertState {
+  zone: ManeuverZone;
+  distanceMeters: number;
+  /** True when the vehicle is inside the zone right now, not just approaching it. */
+  inside: boolean;
+}
+
 export interface NavigationRunState {
   status: NavigationStatus;
   position: LatLng | null;
@@ -27,7 +49,9 @@ export interface NavigationRunState {
   travelledMeters: number;
   /** Current ground speed, m/s. */
   speedMps: number;
-  zoneAlert: { zone: ManeuverZone; distanceMeters: number } | null;
+  zoneAlert: ZoneAlertState | null;
+  /** Index of the route vertex the vehicle has most recently passed. */
+  routeVertexIndex: number;
   /** True when the device has drifted off the route (real driving only). */
   offRoute: boolean;
   /** True when the geolocation watch errored, or no fresh fix arrived within ~10s (real only). */
@@ -55,6 +79,7 @@ export interface NavigationRunControls {
 export function useNavigationRun(
   route: RouteResult | null,
   simulated: boolean,
+  tripwireZones: TripwireZones | null = null,
 ): NavigationRunState & NavigationRunControls {
   const points = useMemo(() => (route ? toLatLngs(route.geometry.coordinates) : []), [route]);
   const cumulative = useMemo(() => {
@@ -65,6 +90,36 @@ export function useNavigationRun(
     return totals;
   }, [points]);
   const totalMeters = cumulative[cumulative.length - 1] ?? 0;
+
+  // The local tripwire over every loaded zone, built once per layer. It does not depend on the
+  // server: once the layers are in memory it keeps alerting through a dropped connection.
+  const tripwire = useMemo(() => {
+    if (!tripwireZones) return null;
+    const entries = [
+      ...tripwireZones.zones.map((feature) => ({
+        ring: feature.geometry.coordinates[0] ?? [],
+        payload: {
+          name: feature.properties.name,
+          nameHe: feature.properties.nameHe,
+          stringency: feature.properties.stringency,
+          description: feature.properties.description,
+          city: feature.properties.city,
+        } satisfies ManeuverZone,
+      })),
+      ...tripwireZones.dangerZones.map((feature) => ({
+        ring: feature.geometry.coordinates[0] ?? [],
+        payload: {
+          name: feature.properties.name,
+          nameHe: feature.properties.name,
+          stringency: 'basic',
+          description: feature.properties.description,
+          city: feature.properties.city,
+          danger: true,
+        } satisfies ManeuverZone,
+      })),
+    ];
+    return entries.length > 0 ? new ZoneTripwire<ManeuverZone>(entries) : null;
+  }, [tripwireZones]);
 
   const maneuverDistances = useMemo(
     () =>
@@ -192,6 +247,13 @@ export function useNavigationRun(
     return interpolate(points[previous], points[Math.min(index, points.length - 1)], ratio);
   }, [points, cumulative, travelled]);
 
+  /** Last route vertex at or behind the travelled distance. */
+  const routeVertexIndex = useMemo(() => {
+    let index = 0;
+    while (index + 1 < cumulative.length && cumulative[index + 1] <= travelled) index += 1;
+    return index;
+  }, [cumulative, travelled]);
+
   // On route the marker rides the polyline; off route it shows where the vehicle actually is,
   // so the driver can see the drift and steer back.
   const position = !simulated && offRoute && rawPosition ? rawPosition : routePosition;
@@ -245,23 +307,65 @@ export function useNavigationRun(
 
   const distanceToManeuver = Math.max(0, Math.round((maneuverDistances[maneuverIndex] ?? 0) - travelled));
 
-  // The zone alert, previously returned by the server report, computed locally from the route's
-  // zone-enter manoeuvres. The nearest one still ahead (or just crossed) inside the alert radius
-  // wins, and its along-route distance counts down like every other manoeuvre.
-  const zoneAlert = useMemo<{ zone: ManeuverZone; distanceMeters: number } | null>(() => {
+  // The zone alert has two sources. The route's own zone-enter manoeuvres (injected by the
+  // server) give the along-route countdown. The local tripwire adds what the server cannot see
+  // in time: the vehicle actually being inside a zone (off the planned line, or on a route that
+  // was never verified), and a zone the remaining route enters that has no manoeuvre. The
+  // nearest of all candidates wins; being inside always wins.
+  const zoneAlert = useMemo<ZoneAlertState | null>(() => {
     if (!route) return null;
-    let best: { zone: ManeuverZone; distanceMeters: number } | null = null;
+    let best: ZoneAlertState | null = null;
+    const consider = (candidate: ZoneAlertState) => {
+      if (
+        !best ||
+        (candidate.inside && !best.inside) ||
+        (candidate.inside === best.inside && candidate.distanceMeters < best.distanceMeters)
+      ) {
+        best = candidate;
+      }
+    };
+
     for (let index = 0; index < route.maneuvers.length; index += 1) {
       const maneuver = route.maneuvers[index];
       if (maneuver.action !== 'zone_enter' || !maneuver.zone) continue;
       const distance = maneuverDistances[index] - travelled;
       if (distance < -ZONE_PASSED_MARGIN || distance > ZONE_ALERT_RADIUS) continue;
-      if (!best || distance < best.distanceMeters) {
-        best = { zone: maneuver.zone, distanceMeters: Math.max(0, Math.round(distance)) };
+      consider({
+        zone: maneuver.zone,
+        distanceMeters: Math.max(0, Math.round(distance)),
+        inside: false,
+      });
+    }
+
+    if (tripwire && position) {
+      const here = tripwire.containing(position);
+      if (here) consider({ zone: here, distanceMeters: 0, inside: true });
+      // Probe the remaining route ahead only while on it: off route, the line ahead is not
+      // where the vehicle is going.
+      if (!here && !(offRoute && !simulated)) {
+        const ahead = [position, ...points.slice(routeVertexIndex + 1)];
+        const hit = tripwire.firstAlong(ahead, ZONE_ALERT_RADIUS);
+        if (hit) {
+          consider({
+            zone: hit.payload,
+            distanceMeters: Math.round(hit.distanceMeters),
+            inside: false,
+          });
+        }
       }
     }
     return best;
-  }, [route, maneuverDistances, travelled]);
+  }, [
+    route,
+    maneuverDistances,
+    travelled,
+    tripwire,
+    position,
+    offRoute,
+    simulated,
+    points,
+    routeVertexIndex,
+  ]);
 
   const simSpeed =
     simulated && !paused && !arrived ? totalMeters / Math.max(route?.durationSeconds ?? 1, 1) : 0;
@@ -279,6 +383,7 @@ export function useNavigationRun(
     travelledMeters: travelled,
     speedMps: simulated ? simSpeed : gpsSpeed,
     zoneAlert,
+    routeVertexIndex,
     offRoute,
     gpsLost,
     progress: totalMeters > 0 ? travelled / totalMeters : 0,
