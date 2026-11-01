@@ -485,6 +485,36 @@ export function Navigation() {
   // Never explain the screen to someone driving: a simulation, or standing still.
   const tour = useTour('drive', simulated || speedKmh < 3);
 
+  /** Offered when the drive ends, on arrival or early, if the driver flagged problems. */
+  const markedCard =
+    marks.length > 0 ? (
+      <div className={styles.markedCard}>
+        <span>{t('report.markedPrompt', { count: marks.length })}</span>
+        <div className={styles.routeActions}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              const first = marks[0];
+              setMarks([]);
+              navigate('/report', {
+                state: {
+                  kind: 'route',
+                  routeId: route.id,
+                  location: first.location ?? undefined,
+                  marked: true,
+                } satisfies ReportContext,
+              });
+            }}
+          >
+            {t('report.markedDescribe')}
+          </Button>
+          <Button variant="ghost" onClick={() => setMarks([])}>
+            {t('report.markedLater')}
+          </Button>
+        </div>
+      </div>
+    ) : null;
+
   return (
     <div className={styles.navRoot}>
       {tour}
@@ -783,6 +813,7 @@ export function Navigation() {
           </>
         }
       >
+        {markedCard}
         <FeedbackFields
           rating={feedbackRating}
           onRate={setFeedbackRating}
@@ -806,33 +837,7 @@ export function Navigation() {
             ? t('navigation.arrivedBody')
             : t('navigation.arrivedBodyUnverified')}
         </div>
-        {marks.length > 0 && (
-          <div className={styles.markedCard}>
-            <span>{t('report.markedPrompt', { count: marks.length })}</span>
-            <div className={styles.routeActions}>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const first = marks[0];
-                  setMarks([]);
-                  navigate('/report', {
-                    state: {
-                      kind: 'route',
-                      routeId: route.id,
-                      location: first.location ?? undefined,
-                      marked: true,
-                    } satisfies ReportContext,
-                  });
-                }}
-              >
-                {t('report.markedDescribe')}
-              </Button>
-              <Button variant="ghost" onClick={() => setMarks([])}>
-                {t('report.markedLater')}
-              </Button>
-            </div>
-          </div>
-        )}
+        {markedCard}
         <FeedbackFields
           rating={feedbackRating}
           onRate={setFeedbackRating}
