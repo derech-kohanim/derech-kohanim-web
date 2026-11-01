@@ -20,6 +20,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
+import appIcon from '@/assets/images/app-icon.png';
 import developerLogo from '@/assets/images/developer-abaye.webp';
 import { api } from '@/api';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
@@ -469,9 +470,7 @@ function AboutSection() {
   return (
     <>
       <div className={styles.aboutHero}>
-        <span className={styles.aboutLogo} aria-hidden>
-          <ShieldCheck size={44} />
-        </span>
+        <img className={styles.aboutLogo} src={appIcon} alt="" />
         <h2 className={styles.aboutName}>{t('app.name')}</h2>
         {/* Isolated left to right, or "0.1.0" reads backwards in Hebrew. */}
         <span className={styles.aboutVersion}>

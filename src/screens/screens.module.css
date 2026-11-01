@@ -1280,14 +1280,9 @@
 }
 
 .aboutLogo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   inline-size: 88px;
   block-size: 88px;
   border-radius: 24px;
-  background: hsl(var(--color-primary));
-  color: hsl(var(--color-primary-contrast));
 }
 
 .aboutName {
