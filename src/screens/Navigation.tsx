@@ -570,10 +570,13 @@ export function Navigation() {
           events={events}
         />
         <div className={styles.navStatusStrip}>
-          <CertaintyIndicator
-            state={route.verifiedClean ? (zoneActive ? 'zoneAhead' : 'verified') : 'unverified'}
-            variant="compact"
-          />
+          {/* A clean route needs no badge; only the exceptions are announced. */}
+          {(!route.verifiedClean || zoneActive) && (
+            <CertaintyIndicator
+              state={route.verifiedClean ? 'zoneAhead' : 'unverified'}
+              variant="compact"
+            />
+          )}
           <Badge tone="neutral" className={styles.navBadge}>
             {t(`stringency.${preferences.stringency}`)}
           </Badge>

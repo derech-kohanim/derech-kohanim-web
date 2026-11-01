@@ -948,7 +948,7 @@
 
 .navDistance {
   font-size: var(--font-size-nav-primary);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-medium);
   line-height: var(--line-height-tight);
   font-variant-numeric: tabular-nums;
   font-family: var(--font-nav);
@@ -956,7 +956,7 @@
 
 .navInstruction {
   font-size: var(--font-size-title);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-medium);
   line-height: var(--line-height-tight);
 }
 
