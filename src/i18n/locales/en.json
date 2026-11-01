@@ -395,9 +395,16 @@
     "backHome": "Back to the main screen"
   },
   "saved": {
+    "count_other": "{{count}} saved places",
+    "count_one": "One saved place",
+    "homeWorkAndMore": "Home, work and more",
+    "needsAccount": "Sign in to save places",
+    "continueAsGuest": "Continue as a guest",
+    "guestBody": "Sign in to save home, work and other places. They are kept in your account and synced across devices.",
+    "guestTitle": "Your saved places will appear here",
     "title": "Saved places",
     "empty": "No saved places yet",
-    "emptyHint": "You can save a destination from the route screen",
+    "emptyHint": "Save a destination from the route review with the star.",
     "addTitle": "Add a place",
     "labelField": "Label",
     "removeConfirm": "Delete {{label}}",

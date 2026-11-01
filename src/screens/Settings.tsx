@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type { Language, Stringency, ThemePreference } from '@dk/shared';
 import {
   Check,
@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import developerLogo from '@/assets/images/developer-abaye.webp';
+import { api } from '@/api';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button, Dialog, Select, Switch } from '@/components/ui';
 import { env } from '@/env';
@@ -96,6 +97,15 @@ export function Settings() {
   const navigate = useNavigate();
   const { preferences } = usePreferences();
   const { user } = useAuth();
+  const [savedCount, setSavedCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    void api
+      .savedPlaces()
+      .then((places) => setSavedCount(places.length))
+      .catch(() => undefined);
+  }, [user]);
 
   const summary: Record<Section, string> = {
     avoidance: t(`stringency.${preferences.stringency}`),
@@ -116,7 +126,7 @@ export function Settings() {
         <Group>
           {SECTIONS.map((section) => {
             const Icon = SECTION_ICON[section];
-            return (
+            const row = (
               <NavRow
                 key={section}
                 icon={<Icon size={18} aria-hidden />}
@@ -125,6 +135,25 @@ export function Settings() {
                 onClick={() => navigate(`/settings/${section}`)}
               />
             );
+            // Saved places is a destination of its own, listed just above About.
+            return section === 'about'
+              ? [
+                  <NavRow
+                    key="saved"
+                    icon={<Star size={18} aria-hidden />}
+                    title={t('settings.savedPlaces')}
+                    subtitle={
+                      user
+                        ? savedCount === null
+                          ? t('saved.homeWorkAndMore')
+                          : t('saved.count', { count: savedCount })
+                        : t('saved.needsAccount')
+                    }
+                    onClick={() => navigate('/saved')}
+                  />,
+                  row,
+                ]
+              : row;
           })}
         </Group>
       </div>
@@ -389,11 +418,6 @@ function AccountSection() {
             onClick={() => navigate('/login')}
           />
         )}
-        <NavRow
-          icon={<Star size={18} aria-hidden />}
-          title={t('settings.savedPlaces')}
-          onClick={() => navigate('/saved')}
-        />
       </Group>
 
       {user && (

@@ -34,20 +34,6 @@ function RequireOnboarding({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-/** Account-only routes: guests are bounced to Login with a return-to back to here. */
-function RequireAccount({ children }: { children: ReactNode }) {
-  const { user, ready } = useAuth();
-  const location = useLocation();
-  // Wait for the session restore so a signed-in user is never flashed to the login screen.
-  if (!ready) return null;
-  if (!user) {
-    return (
-      <Navigate to="/login" replace state={{ returnTo: location.pathname + location.search }} />
-    );
-  }
-  return <>{children}</>;
-}
-
 export function App() {
   return (
     <AuthProvider>
@@ -94,11 +80,7 @@ export function App() {
               <Route path="/settings/:section" element={<SettingsSection />} />
               <Route
                 path="/saved"
-                element={
-                  <RequireAccount>
-                    <SavedPlaces />
-                  </RequireAccount>
-                }
+                element={<SavedPlaces />}
               />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
