@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { api } from '@/api';
+import appIcon from '@/assets/images/app-icon.png';
 import { MapCanvas } from '@/components/map/MapCanvas';
 import { MapControls } from '@/components/map/MapControls';
 import { ZoneInfoSheet } from '@/components/map/ZoneInfoSheet';
@@ -97,6 +98,8 @@ export function Home() {
         <div className={styles.homeTop}>
           <StatusBanner online={online} className={styles.homeStatusBanner} />
           <div className={styles.homeTopBar}>
+            {/* The app's mark, round, at the inline start of the search row and as tall as it. */}
+            <img className={styles.homeAppIcon} src={appIcon} alt={t('app.name')} />
             <div className={styles.homeSearchWrap}>
               <DestinationSearch onSelect={go} near={origin} />
             </div>
