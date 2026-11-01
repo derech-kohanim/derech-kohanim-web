@@ -1467,3 +1467,80 @@
   flex-direction: column;
   gap: var(--space-4);
 }
+
+/* Taharat HaKohanim contact card: apart from the settings list, pinned to the bottom. */
+.taharatCard {
+  position: sticky;
+  inset-block-end: 0;
+  margin-block-start: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid hsl(var(--color-primary) / 0.35);
+  border-radius: var(--radius-lg);
+  background: hsl(var(--color-primary-soft));
+  text-align: start;
+}
+
+.taharatIcon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: var(--radius-full);
+  background: hsl(var(--color-primary));
+  color: hsl(var(--color-primary-contrast));
+}
+
+.taharatText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.taharatTitle {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  color: hsl(var(--color-text));
+}
+
+.taharatBody {
+  font-size: var(--font-size-label);
+  color: hsl(var(--color-text-muted));
+}
+
+.taharatActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block-start: var(--space-2);
+}
+
+.taharatButton,
+.taharatButtonOutline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+}
+
+.taharatButton {
+  background: hsl(var(--color-primary));
+  color: hsl(var(--color-primary-contrast));
+}
+
+.taharatButtonOutline {
+  border: 1px solid hsl(var(--color-border-strong));
+  background: hsl(var(--color-surface));
+  color: hsl(var(--color-primary));
+}
