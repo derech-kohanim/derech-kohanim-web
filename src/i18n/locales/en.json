@@ -317,7 +317,8 @@
       "display": "Display and language",
       "data": "Zone data",
       "account": "Account",
-      "about": "About and legal"
+      "about": "About and legal",
+      "guide": "Guide and tips"
     },
     "voiceOnSummary": "Voice guidance on",
     "voiceOffSummary": "Voice guidance off",
@@ -371,7 +372,42 @@
     "taharatContactSummary": "Questions, doubts and corrections to the zone data",
     "taharatContactBody": "The zone data is taken from publications of the Taharat HaKohanim association. For any question, doubt or special case, and to report a mistake in the data, contact them:",
     "phone": "Phone",
-    "email": "Email"
+    "email": "Email",
+    "guideSummary": "A tour of the app and usage tips",
+    "guideReplay": "Show the tour again",
+    "guideReplayHint": "The tour on each screen appears again, step by step",
+    "guideReplayDone": "The tour will show again on every screen",
+    "tipsTitle": "Tips",
+    "tips": {
+      "zone": {
+        "title": "Tap a coloured zone",
+        "body": "See what is there, why it is avoided, and at which level of care."
+      },
+      "legend": {
+        "title": "What each colour means",
+        "body": "The layers button in the corner opens the legend."
+      },
+      "simulate": {
+        "title": "See it before you drive",
+        "body": "A simulation drives the route on the map without moving."
+      },
+      "voice": {
+        "title": "Quick voice settings",
+        "body": "Press and hold the speaker button while driving."
+      },
+      "noClean": {
+        "title": "When there is no way around",
+        "body": "Pick another destination, change the level, or drive knowingly. Either way you get an alert before the zone."
+      },
+      "account": {
+        "title": "Why sign in",
+        "body": "Home, work and saved places, and settings that follow you between phone and computer."
+      },
+      "offline": {
+        "title": "Without signal",
+        "body": "A route that was already computed keeps working, voice guidance and alerts included."
+      }
+    }
   },
   "legal": {
     "termsTitle": "Terms of use",
@@ -473,5 +509,79 @@
     "guest": "Guest",
     "account": "My account",
     "signOut": "Sign out"
+  },
+  "tour": {
+    "skip": "Skip",
+    "prev": "Back",
+    "next": "Next",
+    "done": "Done",
+    "never": "Don't show tours again",
+    "progress": "Step {{current}} of {{total}}",
+    "home": {
+      "search": {
+        "title": "Where to?",
+        "body": "Type an address, a place or a business name, and pick from the list."
+      },
+      "zone": {
+        "title": "What's in this zone?",
+        "body": "Every coloured area is a place the route avoids. Tap one to see what is there and why it is avoided."
+      },
+      "legend": {
+        "title": "What each colour means",
+        "body": "This opens the legend: pink, brown and orange are the levels of care, violet is a danger zone."
+      },
+      "level": {
+        "title": "What the route avoids",
+        "body": "This shows the level you chose. Tap it to change it quickly."
+      },
+      "locate": {
+        "title": "Back to where you are",
+        "body": "If you moved the map away, this brings it back to you."
+      },
+      "account": {
+        "title": "Worth signing in",
+        "body": "Everything works without an account. With one, home, work and other places are saved, and your settings follow you between phone and computer."
+      },
+      "done": {
+        "title": "That's it, off you go",
+        "body": "You can open the tour and the tips again any time, in Settings under \"Guide and tips\"."
+      }
+    },
+    "route": {
+      "alternatives": {
+        "title": "Pick a route",
+        "body": "When there is more than one way, choose here. Every route in the list avoids the zones."
+      },
+      "options": {
+        "title": "Traffic and tolls",
+        "body": "Ask for a route that weighs traffic or avoids toll roads. The route is computed again."
+      },
+      "simulate": {
+        "title": "See it first?",
+        "body": "A simulation drives the route on the map, with voice guidance, without moving."
+      },
+      "save": {
+        "title": "Save it for next time",
+        "body": "The star saves the destination as home, work or another place. Needs an account."
+      }
+    },
+    "drive": {
+      "banner": {
+        "title": "What to do now",
+        "body": "The next turn is at the top, the one after it below. The voice says the same."
+      },
+      "speed": {
+        "title": "The speed limit here",
+        "body": "The circle shows the speed limit. Before speed cameras and rail crossings you hear an alert."
+      },
+      "voice": {
+        "title": "Mute and voice settings",
+        "body": "Tap to mute. Press and hold for the voice settings."
+      },
+      "steps": {
+        "title": "Every turn in a list",
+        "body": "All the turns to the destination, including the zones the route avoids."
+      }
+    }
   }
 }

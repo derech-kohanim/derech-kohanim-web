@@ -1,15 +1,21 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { Language, Stringency, ThemePreference } from '@dk/shared';
 import {
+  AlertTriangle,
+  BookOpen,
   Check,
   ChevronLeft,
   Database,
   FileText,
   Globe,
   Info,
+  Layers,
   LogIn,
   LogOut,
   Phone,
+  PlayCircle,
+  RotateCcw,
+  Route as RouteIcon,
   Map as MapIcon,
   Shield,
   ShieldCheck,
@@ -25,7 +31,7 @@ import appIcon from '@/assets/images/app-icon.png';
 import developerLogo from '@/assets/images/developer-abaye.webp';
 import { api } from '@/api';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { Button, Dialog, Select, Switch } from '@/components/ui';
+import { Button, Dialog, Select, Switch, useToast } from '@/components/ui';
 import { env } from '@/env';
 import { currentLanguage } from '@/i18n';
 import { useAuth } from '@/state/AuthProvider';
@@ -33,6 +39,7 @@ import { usePreferences } from '@/state/PreferencesProvider';
 import { useTrip } from '@/state/TripProvider';
 import { TAHARAT_EMAIL, TAHARAT_PHONE } from '@/lib/contacts';
 import { VoiceSettings } from '@/voice/VoiceSettings';
+import { resetTours } from '@/tour/Tour';
 
 import styles from './screens.module.css';
 
@@ -44,7 +51,7 @@ const LEVEL_HINT: Record<Stringency, string> = {
 };
 
 /** The settings categories, in menu order. Each one is its own sub-screen. */
-const SECTIONS = ['avoidance', 'voice', 'display', 'data', 'account', 'about'] as const;
+const SECTIONS = ['avoidance', 'voice', 'display', 'data', 'account', 'guide', 'about'] as const;
 type Section = (typeof SECTIONS)[number];
 
 const SECTION_ICON: Record<Section, typeof Shield> = {
@@ -53,6 +60,7 @@ const SECTION_ICON: Record<Section, typeof Shield> = {
   display: MapIcon,
   data: Database,
   account: User,
+  guide: BookOpen,
   about: Info,
 };
 
@@ -119,6 +127,7 @@ export function Settings() {
     )}`,
     data: t('settings.dataSummary'),
     account: user ? (user.displayName ?? user.email ?? '') : t('settings.guestSummary'),
+    guide: t('settings.guideSummary'),
     about: t('settings.aboutSummary'),
   };
 
@@ -141,7 +150,7 @@ export function Settings() {
             );
             // Saved places is a destination of its own, listed just above About, and the zone
             // authority's contact card sits beside it.
-            return section === 'about'
+            return section === 'guide'
               ? [
                   <NavRow
                     key="taharat"
@@ -214,6 +223,7 @@ export function SettingsSection() {
         {current === 'display' && <DisplaySection />}
         {current === 'data' && <DataSection />}
         {current === 'account' && <AccountSection />}
+        {current === 'guide' && <GuideSection />}
         {current === 'about' && <AboutSection />}
       </div>
     </div>
@@ -560,6 +570,50 @@ function AboutSection() {
           </div>
         )}
         <p className={styles.settingsNote}>{t('settings.zoneDataCredit')}</p>
+      </Group>
+    </>
+  );
+}
+
+const TIPS: { key: string; icon: typeof Shield }[] = [
+  { key: 'zone', icon: Shield },
+  { key: 'legend', icon: Layers },
+  { key: 'simulate', icon: PlayCircle },
+  { key: 'voice', icon: Volume2 },
+  { key: 'noClean', icon: AlertTriangle },
+  { key: 'account', icon: User },
+  { key: 'offline', icon: RouteIcon },
+];
+
+/** Guide and tips: replay the tours, and every tip in one list. */
+function GuideSection() {
+  const { t } = useTranslation();
+  const toast = useToast();
+  return (
+    <>
+      <Group>
+        <NavRow
+          icon={<RotateCcw size={18} aria-hidden />}
+          title={t('settings.guideReplay')}
+          subtitle={t('settings.guideReplayHint')}
+          onClick={() => {
+            resetTours();
+            toast.show(t('settings.guideReplayDone'), 'info');
+          }}
+        />
+      </Group>
+      <Group title={t('settings.tipsTitle')}>
+        {TIPS.map(({ key, icon: Icon }) => (
+          <div key={key} className={styles.settingsRow}>
+            <span className={styles.actionChip}>
+              <Icon size={18} aria-hidden />
+            </span>
+            <span className={styles.actionText}>
+              {t(`settings.tips.${key}.title`)}
+              <span className={styles.actionSubtitle}>{t(`settings.tips.${key}.body`)}</span>
+            </span>
+          </div>
+        ))}
       </Group>
     </>
   );

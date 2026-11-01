@@ -1,0 +1,115 @@
+/* Guided tour layer: a cut-out over the highlighted control and a Civic card beside it. */
+
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+}
+
+.scrim,
+.spot {
+  position: fixed;
+  pointer-events: none;
+}
+
+.scrim {
+  inset: 0;
+  background: hsl(219 38% 9% / 0.62);
+}
+
+.spot {
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 0 9999px hsl(219 38% 9% / 0.62);
+  outline: 2px solid hsl(0 0% 100%);
+  outline-offset: 2px;
+  transition:
+    top var(--duration-normal) var(--easing-standard),
+    left var(--duration-normal) var(--easing-standard),
+    width var(--duration-normal) var(--easing-standard),
+    height var(--duration-normal) var(--easing-standard);
+}
+
+/* The layer itself catches clicks, so a tap outside the card never reaches the screen behind
+   and never closes the tour by accident. */
+.layer::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+}
+
+.card {
+  position: fixed;
+  inset-inline: max(16px, calc((100vw - 420px) / 2));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid hsl(var(--color-border));
+  border-radius: var(--radius-lg);
+  background: hsl(var(--color-surface));
+  box-shadow: var(--elevation-overlay);
+  text-align: start;
+  outline: none;
+}
+
+.title {
+  font-size: var(--font-size-body-large);
+  font-weight: var(--font-weight-semibold);
+  color: hsl(var(--color-text));
+}
+
+.body {
+  font-size: var(--font-size-body);
+  line-height: 24px;
+  color: hsl(var(--color-text-body));
+}
+
+.never {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-label);
+  color: hsl(var(--color-text-muted));
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-block-start: var(--space-1);
+}
+
+.dots {
+  display: flex;
+  gap: 5px;
+}
+
+.dot {
+  inline-size: 7px;
+  block-size: 7px;
+  border-radius: var(--radius-full);
+  background: hsl(var(--color-border));
+}
+
+.dot[data-on='true'] {
+  background: hsl(var(--color-primary));
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.skip {
+  padding-inline: var(--space-2);
+  font-size: var(--font-size-label);
+  color: hsl(var(--color-text-muted));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spot {
+    transition: none;
+  }
+}

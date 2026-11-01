@@ -32,6 +32,7 @@ import { isZoneManeuver, maneuverIcon, maneuverText } from '@/lib/maneuver';
 import { useVisibleZones } from '@/lib/useVisibleZones';
 import { referenceBounds } from '@/lib/zoneFilter';
 import { useNavPrep } from '@/navigation/useNavPrep';
+import { useTour } from '@/tour/Tour';
 import { usePreferences } from '@/state/PreferencesProvider';
 import { useTrip } from '@/state/TripProvider';
 import { useRequireAccount } from '@/state/useRequireAccount';
@@ -67,6 +68,7 @@ export function RouteReview() {
   const requireAccount = useRequireAccount();
   const [proceedOpen, setProceedOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
+  const tour = useTour('route', status === 'ready' && route !== null);
   const [showUnavoided, setShowUnavoided] = useState(false);
   const [selectedZone, setSelectedZone] = useState<SelectedZone | null>(null);
 
@@ -157,6 +159,7 @@ export function RouteReview() {
         actions={
           destination ? (
             <IconButton
+              data-tour="save"
               label={t('route.addFavorite')}
               icon={<Star size={22} />}
               onClick={() => requireAccount(() => setSaveOpen(true))}
@@ -281,6 +284,7 @@ export function RouteReview() {
             {routes.length > 1 && (
               <div
                 className={styles.altList}
+                data-tour="alternatives"
                 role="radiogroup"
                 aria-label={t('route.alternativesTitle')}
               >
@@ -356,6 +360,7 @@ export function RouteReview() {
             )}
 
             {/* Flipping this re-fetches the route, so the ETA above is always the server time. */}
+            <div className={styles.routeOptions} data-tour="options">
             <Switch
               className={styles.trafficToggle}
               checked={preferences.trafficAware}
@@ -370,6 +375,7 @@ export function RouteReview() {
               onCheckedChange={(avoidTolls) => update({ avoidTolls })}
               label={t('route.tollToggle')}
             />
+            </div>
 
             {/* Danger-zone (Area A) avoidance, on by default. Also recomputes the plan. */}
             <Switch
@@ -415,6 +421,7 @@ export function RouteReview() {
               size="large"
               className={route.verifiedClean ? undefined : styles.routeActionMain}
               iconStart={<PlayCircle size={20} aria-hidden />}
+              data-tour="simulate"
               onClick={() => start(true)}
             >
               {t('route.simulate')}
@@ -464,6 +471,7 @@ export function RouteReview() {
         )}
       </div>
 
+      {tour}
       <Dialog
         open={proceedOpen}
         onClose={() => setProceedOpen(false)}

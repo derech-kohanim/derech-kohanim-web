@@ -17,6 +17,7 @@ import { ProfileButton } from '@/components/profile/ProfileButton';
 import { DestinationSearch } from '@/components/search/DestinationSearch';
 import { StatusBanner } from '@/components/status/StatusBanner';
 import { StringencyDialog } from '@/screens/Settings';
+import { useTour } from '@/tour/Tour';
 import { IconButton, useToast } from '@/components/ui';
 import { env } from '@/env';
 import { useConnectivity } from '@/lib/useConnectivity';
@@ -41,6 +42,7 @@ export function Home() {
   const [camera, setCamera] = useState<MapCamera>(HOME_CAMERA);
   const [selectedZone, setSelectedZone] = useState<SelectedZone | null>(null);
   const [levelOpen, setLevelOpen] = useState(false);
+  const tour = useTour('home', true);
 
   // Only the zones the map is actually showing: the country-wide layers follow the camera, so
   // panning or zooming out reveals the zones there instead of leaving the area blank. Until the
@@ -90,6 +92,7 @@ export function Home() {
       </div>
 
       <ZoneInfoSheet selection={selectedZone} onClose={() => setSelectedZone(null)} />
+      {tour}
       <StringencyDialog open={levelOpen} onClose={() => setLevelOpen(false)} />
 
       {/* Everything floating over the map is unselectable, so a drag on (or across) the chrome
@@ -100,7 +103,7 @@ export function Home() {
           <div className={styles.homeTopBar}>
             {/* The app's mark, round, at the inline start of the search row and as tall as it. */}
             <img className={styles.homeAppIcon} src={appIcon} alt={t('app.name')} />
-            <div className={styles.homeSearchWrap}>
+            <div className={styles.homeSearchWrap} data-tour="search" data-tour-inner>
               <DestinationSearch onSelect={go} near={origin} />
             </div>
             {/* Reading inline-end edge inward: profile/login (outermost, flush to the edge) then
@@ -113,7 +116,9 @@ export function Home() {
                 icon={<Settings2 size={22} />}
                 onClick={() => navigate('/settings')}
               />
-              <ProfileButton />
+              <span data-tour="account" className={styles.tourAnchor}>
+                <ProfileButton />
+              </span>
             </div>
           </div>
         </div>
@@ -166,6 +171,7 @@ export function Home() {
           <button
             type="button"
             className={styles.stringencyPill}
+            data-tour="level"
             data-stringency={preferences.stringency}
             onClick={() => setLevelOpen(true)}
           >

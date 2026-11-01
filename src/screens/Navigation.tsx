@@ -67,6 +67,7 @@ import {
   type AlertPhraseKind,
 } from '@/voice/phrase';
 import { voiceEngine } from '@/voice/VoiceEngine';
+import { useTour } from '@/tour/Tour';
 import { VoiceSettings } from '@/voice/VoiceSettings';
 
 import navStyles from '@/navigation/navigation.module.css';
@@ -477,12 +478,16 @@ export function Navigation() {
   const Icon = maneuverIcon(maneuver?.action ?? 'continue');
   const zoneActive = run.zoneAlert !== null;
   const speedKmh = liveSpeedKmh;
+  // Never explain the screen to someone driving: a simulation, or standing still.
+  const tour = useTour('drive', simulated || speedKmh < 3);
 
   return (
     <div className={styles.navRoot}>
+      {tour}
       <button
         type="button"
         className={`${styles.navBanner} ${zoneActive ? styles['navBanner--zone'] : ''}`}
+        data-tour="banner"
         onClick={() => setStepsOpen(true)}
         aria-haspopup="dialog"
         aria-label={t('navigation.allSteps')}
@@ -597,7 +602,7 @@ export function Navigation() {
         {speeding && <div className={navStyles.speedingFrame} aria-hidden />}
 
         {(speedKmh > 0 || limitKmh !== null) && (
-          <div className={navStyles.navSpeedo}>
+          <div className={navStyles.navSpeedo} data-tour="speed">
             <Speedometer speedKmh={speedKmh} limitKmh={limitKmh} />
           </div>
         )}
@@ -688,6 +693,7 @@ export function Navigation() {
         </div>
         <IconButton
           label={t('navigation.allSteps')}
+          data-tour="steps"
           icon={<ListOrdered size={22} />}
           onClick={() => setStepsOpen(true)}
         />
@@ -704,6 +710,7 @@ export function Navigation() {
             preferences.voiceEnabled ? t('navigation.muteVoice') : t('navigation.unmuteVoice')
           }. ${t('navigation.voiceLongPress')}`}
           icon={preferences.voiceEnabled ? <Volume2 size={22} /> : <VolumeX size={22} />}
+          data-tour="voice"
           onPointerDown={muteLongPress.onPointerDown}
           onPointerUp={muteLongPress.onPointerUp}
           onPointerLeave={muteLongPress.onPointerLeave}

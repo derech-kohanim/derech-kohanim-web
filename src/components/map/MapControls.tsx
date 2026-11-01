@@ -75,6 +75,7 @@ export function MapControls({
       )}
       <IconButton
         label={t('navigation.recenter')}
+        data-tour="locate"
         variant={camera.follow && !overview ? 'primary' : 'solid'}
         className={floating ? undefined : styles.recenterStatic}
         icon={locating ? <Spinner size="small" /> : <LocateFixed size={20} />}
