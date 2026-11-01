@@ -3,6 +3,7 @@ import type { Stringency, TermsDocument } from '@dk/shared';
 import {
   BookOpenCheck,
   Check,
+  Flag,
   MapPin,
   Route as RouteIcon,
   ShieldCheck,
@@ -14,6 +15,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { api } from '@/api';
 import appIcon from '@/assets/images/app-icon.png';
+import developerLogo from '@/assets/images/developer-abaye.webp';
+import { TAHARAT_EMAIL, TAHARAT_PHONE } from '@/lib/contacts';
 import { Button, Card, Markdown, Skeleton, Switch } from '@/components/ui';
 import { currentLanguage } from '@/i18n';
 import { useAuth } from '@/state/AuthProvider';
@@ -104,6 +107,10 @@ export function Onboarding() {
                 <img className={styles.brandIcon} src={appIcon} alt="" />
                 <h1 className={`${styles.title} ${styles.titleCentered}`}>{t('app.name')}</h1>
                 <p className={`${styles.lead} ${styles.leadCentered}`}>{t('onboarding.intro')}</p>
+                <span className={styles.madeBy}>
+                  <img src={developerLogo} alt="" />
+                  {t('onboarding.madeBy')}
+                </span>
               </div>
             )}
 
@@ -138,8 +145,21 @@ export function Onboarding() {
                   {t('onboarding.dataSource')}
                 </p>
                 <p className={styles.promise}>
+                  <Flag size={20} className={styles.promiseIcon} aria-hidden />
+                  {t('onboarding.dataReport')}
+                </p>
+                <p className={styles.promise}>
                   <ShieldCheck size={20} className={styles.promiseIcon} aria-hidden />
-                  {t('onboarding.notRabbi')}
+                  <span>
+                    {t('onboarding.notRabbi')}{' '}
+                    <a className={styles.inlineLink} href={`tel:${TAHARAT_PHONE.replace(/-/g, '')}`}>
+                      <bdi dir="ltr">{TAHARAT_PHONE}</bdi>
+                    </a>{' '}
+                    {t('onboarding.orEmail')}{' '}
+                    <a className={styles.inlineLink} href={`mailto:${TAHARAT_EMAIL}`}>
+                      <bdi dir="ltr">{TAHARAT_EMAIL}</bdi>
+                    </a>
+                  </span>
                 </p>
                 <p className={styles.promise}>
                   <ShieldCheck size={20} className={styles.promiseIcon} aria-hidden />

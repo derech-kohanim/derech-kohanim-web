@@ -47,8 +47,8 @@
       }
     },
     "dataTitle": "Where the data comes from",
-    "dataSource": "The list of zones comes from the Taharat HaKohanim association and is updated every night.",
-    "notRabbi": "This is an aid, not a halachic ruling. When in doubt, ask a rabbi.",
+    "dataSource": "The data is taken from publications of the Taharat HaKohanim association, which holds the rights to it.",
+    "notRabbi": "We have tried to keep the data accurate, but the app is only an aid. For any question, doubt or special case, contact the Taharat HaKohanim association by phone at",
     "privacy": "To improve the service we collect anonymous usage data, with nothing that identifies you.",
     "stringencyTitle": "What to avoid",
     "stringencyIntro": "Choose a level. You can change it any time, also from the main screen.",
@@ -56,7 +56,10 @@
     "termsAccept": "I have read and accept the terms of use",
     "termsEmpty": "The full terms of use will be provided soon.",
     "start": "Get started",
-    "mustAccept": "You must accept the terms to continue"
+    "mustAccept": "You must accept the terms to continue",
+    "dataReport": "To report a problem with the forbidden-zone data, contact them or send a report from the app.",
+    "orEmail": "or by email at",
+    "madeBy": "Developed by abaye"
   },
   "auth": {
     "loginTitle": "Sign in",
@@ -336,7 +339,7 @@
     "version": "Version",
     "aboutTagline": "Navigation that avoids the zones forbidden to kohanim, at the avoidance level you choose.",
     "openSource": "Open source",
-    "zoneDataCredit": "Zone data courtesy of Taharat HaKohanim (gps.hakohanim.org). Road data: OpenStreetMap.",
+    "zoneDataCredit": "The zone data is taken from publications of the Taharat HaKohanim association, which holds the rights to it. Road data: OpenStreetMap.",
     "title": "Settings",
     "language": "Language",
     "languageHe": "עברית",
@@ -363,7 +366,12 @@
     "voiceMale": "Male voice",
     "voiceFemale": "Female voice",
     "voiceIdDescription": "Who reads the instructions: a male or a female speaker",
-    "voiceTitle": "Voice settings"
+    "voiceTitle": "Voice settings",
+    "taharatContact": "Contact Taharat HaKohanim",
+    "taharatContactSummary": "Questions, doubts and corrections to the zone data",
+    "taharatContactBody": "The zone data is taken from publications of the Taharat HaKohanim association. For any question, doubt or special case, and to report a mistake in the data, contact them:",
+    "phone": "Phone",
+    "email": "Email"
   },
   "legal": {
     "termsTitle": "Terms of use",

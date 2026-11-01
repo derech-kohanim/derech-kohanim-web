@@ -1428,3 +1428,29 @@
   block-size: 96px;
   border-radius: 26px;
 }
+
+.madeBy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-start: var(--space-6);
+  font-size: var(--font-size-label);
+  color: hsl(var(--color-text-muted));
+}
+
+.madeBy img {
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+}
+
+.inlineLink {
+  color: hsl(var(--color-primary));
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.inlineLink:hover {
+  text-decoration: underline;
+}

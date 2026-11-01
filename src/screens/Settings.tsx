@@ -9,6 +9,7 @@ import {
   Info,
   LogIn,
   LogOut,
+  Phone,
   Map as MapIcon,
   Shield,
   ShieldCheck,
@@ -30,6 +31,7 @@ import { currentLanguage } from '@/i18n';
 import { useAuth } from '@/state/AuthProvider';
 import { usePreferences } from '@/state/PreferencesProvider';
 import { useTrip } from '@/state/TripProvider';
+import { TAHARAT_EMAIL, TAHARAT_PHONE } from '@/lib/contacts';
 import { VoiceSettings } from '@/voice/VoiceSettings';
 
 import styles from './screens.module.css';
@@ -99,6 +101,7 @@ export function Settings() {
   const { preferences } = usePreferences();
   const { user } = useAuth();
   const [savedCount, setSavedCount] = useState<number | null>(null);
+  const [contactOpen, setContactOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -136,9 +139,17 @@ export function Settings() {
                 onClick={() => navigate(`/settings/${section}`)}
               />
             );
-            // Saved places is a destination of its own, listed just above About.
+            // Saved places is a destination of its own, listed just above About, and the zone
+            // authority's contact card sits beside it.
             return section === 'about'
               ? [
+                  <NavRow
+                    key="taharat"
+                    icon={<Phone size={18} aria-hidden />}
+                    title={t('settings.taharatContact')}
+                    subtitle={t('settings.taharatContactSummary')}
+                    onClick={() => setContactOpen(true)}
+                  />,
                   <NavRow
                     key="saved"
                     icon={<Star size={18} aria-hidden />}
@@ -158,6 +169,28 @@ export function Settings() {
           })}
         </Group>
       </div>
+      <Dialog
+        open={contactOpen}
+        onClose={() => setContactOpen(false)}
+        title={t('settings.taharatContact')}
+        actions={<Button onClick={() => setContactOpen(false)}>{t('common.close')}</Button>}
+      >
+        <p className={styles.dialogBody}>{t('settings.taharatContactBody')}</p>
+        <div className={styles.settingsGroup}>
+          <div className={styles.settingsInfoRow}>
+            <span>{t('settings.phone')}</span>
+            <a className={styles.settingsLink} href={`tel:${TAHARAT_PHONE.replace(/-/g, '')}`}>
+              <bdi dir="ltr">{TAHARAT_PHONE}</bdi>
+            </a>
+          </div>
+          <div className={styles.settingsInfoRow}>
+            <span>{t('settings.email')}</span>
+            <a className={styles.settingsLink} href={`mailto:${TAHARAT_EMAIL}`}>
+              <bdi dir="ltr">{TAHARAT_EMAIL}</bdi>
+            </a>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 }
