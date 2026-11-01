@@ -4,7 +4,6 @@ import {
   BookOpenCheck,
   Check,
   MapPin,
-  Navigation,
   Route as RouteIcon,
   ShieldCheck,
   Volume2,
@@ -14,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { api } from '@/api';
+import appIcon from '@/assets/images/app-icon.png';
 import { Button, Card, Markdown, Skeleton, Switch } from '@/components/ui';
 import { currentLanguage } from '@/i18n';
 import { useAuth } from '@/state/AuthProvider';
@@ -101,9 +101,7 @@ export function Onboarding() {
           <div className={styles.wizardContent}>
             {current === 'welcome' && (
               <div className={styles.brand}>
-                <span className={styles.brandMark}>
-                  <Navigation size={30} aria-hidden />
-                </span>
+                <img className={styles.brandIcon} src={appIcon} alt="" />
                 <h1 className={`${styles.title} ${styles.titleCentered}`}>{t('app.name')}</h1>
                 <p className={`${styles.lead} ${styles.leadCentered}`}>{t('onboarding.intro')}</p>
               </div>
@@ -112,7 +110,6 @@ export function Onboarding() {
             {current === 'how' && (
               <Card>
                 <h2 className={styles.title}>{t('onboarding.howTitle')}</h2>
-                <p className={styles.lead}>{t('onboarding.howIntro')}</p>
                 <ol className={styles.howList}>
                   {HOW_STEPS.map(({ key, icon: Icon }) => (
                     <li key={key} className={styles.howStep}>
@@ -178,7 +175,7 @@ export function Onboarding() {
 
             {current === 'terms' && (
               <Card>
-                <h2 className={styles.title}>{terms?.title || t('onboarding.termsTitle')}</h2>
+                <h2 className={styles.title}>{t('onboarding.termsTitle')}</h2>
                 {terms ? (
                   <div className={`${styles.terms} ${styles.termsTall}`}>
                     {termsBody ? (

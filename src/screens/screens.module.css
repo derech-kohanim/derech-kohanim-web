@@ -1422,3 +1422,9 @@
   box-shadow: var(--elevation-lg);
   pointer-events: none;
 }
+
+.brandIcon {
+  inline-size: 96px;
+  block-size: 96px;
+  border-radius: 26px;
+}

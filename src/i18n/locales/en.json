@@ -22,38 +22,37 @@
   },
   "onboarding": {
     "welcome": "Welcome",
-    "intro": "Live turn by turn navigation that respects the areas forbidden to kohanim, and verifies every route before showing it.",
+    "intro": "Ordinary navigation, except the route already avoids the places a kohen stays away from.",
     "getStarted": "Let's begin",
     "next": "Continue",
     "back": "Back",
     "progress": "Step {{current}} of {{total}}",
     "howTitle": "How it works",
-    "howIntro": "Four simple steps, from destination to the road.",
     "steps": {
       "destination": {
-        "title": "Choose a destination",
-        "body": "Type where you want to go, just like any navigation app."
+        "title": "Type where you are going",
+        "body": "Like any navigation app."
       },
       "compute": {
-        "title": "We compute a clean route",
-        "body": "The system builds a route that avoids the areas forbidden to kohanim."
+        "title": "Get a route that avoids",
+        "body": "The route is planned so it does not pass through the zones you chose to avoid."
       },
       "beforeDeparture": {
-        "title": "You know before you leave",
-        "body": "If no clean route exists, you are told before departure, not mid drive."
+        "title": "Know before you leave",
+        "body": "If there is no way around, you find out at home and decide what to do."
       },
       "voice": {
-        "title": "Voice guidance on the road",
-        "body": "Spoken turn by turn guidance stays with you the whole way."
+        "title": "Drive with voice guidance",
+        "body": "And before you approach a zone, you get an alert."
       }
     },
-    "dataTitle": "Data source",
-    "dataSource": "The data about the problematic places was received from the Association for the Purity of the Kohanim (Hitachdut Taharat HaKohanim).",
-    "notRabbi": "This system is not a substitute for halachic ruling.",
-    "privacy": "To improve the service, anonymous usage data is collected, with no personal identification.",
-    "stringencyTitle": "Your stringency level",
-    "stringencyIntro": "Choose how strict to be. You can change it any time in settings.",
-    "termsTitle": "Terms of use",
+    "dataTitle": "Where the data comes from",
+    "dataSource": "The list of zones comes from the Taharat HaKohanim association and is updated every night.",
+    "notRabbi": "This is an aid, not a halachic ruling. When in doubt, ask a rabbi.",
+    "privacy": "To improve the service we collect anonymous usage data, with nothing that identifies you.",
+    "stringencyTitle": "What to avoid",
+    "stringencyIntro": "Choose a level. You can change it any time, also from the main screen.",
+    "termsTitle": "One more thing",
     "termsAccept": "I have read and accept the terms of use",
     "termsEmpty": "The full terms of use will be provided soon.",
     "start": "Get started",
@@ -309,7 +308,14 @@
   "settings": {
     "developedBy": "Developed by abaye",
     "chooseLevelTitle": "Choose the avoidance level",
-    "section": {"avoidance": "Avoidance and route", "voice": "Voice and guidance", "display": "Display and language", "data": "Zone data", "account": "Account", "about": "About and legal"},
+    "section": {
+      "avoidance": "Avoidance and route",
+      "voice": "Voice and guidance",
+      "display": "Display and language",
+      "data": "Zone data",
+      "account": "Account",
+      "about": "About and legal"
+    },
     "voiceOnSummary": "Voice guidance on",
     "voiceOffSummary": "Voice guidance off",
     "dataSummary": "Zone layer updates",
