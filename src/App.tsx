@@ -12,7 +12,7 @@ import { Onboarding } from '@/screens/Onboarding';
 import { Register } from '@/screens/Register';
 import { RouteReview } from '@/screens/RouteReview';
 import { SavedPlaces } from '@/screens/SavedPlaces';
-import { Settings } from '@/screens/Settings';
+import { Settings, SettingsSection } from '@/screens/Settings';
 import { AuthProvider, useAuth } from '@/state/AuthProvider';
 import { PreferencesProvider } from '@/state/PreferencesProvider';
 import { TripProvider } from '@/state/TripProvider';
@@ -91,6 +91,7 @@ export function App() {
                 }
               />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/settings/:section" element={<SettingsSection />} />
               <Route
                 path="/saved"
                 element={

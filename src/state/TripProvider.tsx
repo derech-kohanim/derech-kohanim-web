@@ -58,6 +58,8 @@ interface TripApi {
   status: RouteStatus;
   errorCode: string | null;
   zones: ZoneCollection | null;
+  /** When the stringency zone layers were last loaded from the server, or null. */
+  zonesLoadedAt: Date | null;
   /** Danger zones (Area A), a separate layer from the stringency zones. */
   dangerZones: DangerZoneCollection | null;
   compute: (destination: Destination) => Promise<RouteResult | null>;
@@ -88,6 +90,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<RouteStatus>('idle');
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [zones, setZones] = useState<ZoneCollection | null>(null);
+  const [zonesLoadedAt, setZonesLoadedAt] = useState<Date | null>(null);
   const [dangerZones, setDangerZones] = useState<DangerZoneCollection | null>(null);
   const inFlight = useRef<AbortController | null>(null);
 
@@ -129,7 +132,10 @@ export function TripProvider({ children }: { children: ReactNode }) {
     void api
       .zones(preferences.stringency)
       .then((collection) => {
-        if (!cancelled) setZones(collection);
+        if (!cancelled) {
+          setZones(collection);
+          setZonesLoadedAt(new Date());
+        }
       })
       .catch(() => undefined);
     return () => {
@@ -328,6 +334,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
       status,
       errorCode,
       zones,
+      zonesLoadedAt,
       dangerZones,
       compute,
       recompute,
@@ -350,6 +357,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
       status,
       errorCode,
       zones,
+      zonesLoadedAt,
       dangerZones,
       compute,
       recompute,

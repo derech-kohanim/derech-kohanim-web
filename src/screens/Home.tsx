@@ -161,7 +161,7 @@ export function Home() {
             type="button"
             className={styles.stringencyPill}
             data-stringency={preferences.stringency}
-            onClick={() => navigate('/settings')}
+            onClick={() => navigate('/settings/avoidance')}
           >
             <Shield size={18} aria-hidden />
             <span className={styles.stringencyPillLabel}>{t('home.avoidanceLevel')}</span>

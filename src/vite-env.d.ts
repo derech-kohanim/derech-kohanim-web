@@ -9,6 +9,9 @@ interface ImportMetaEnv {
   readonly VITE_GA_MEASUREMENT_ID?: string;
 }
 
+/** The package version, injected by vite.config.ts. */
+declare const __APP_VERSION__: string;
+
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }

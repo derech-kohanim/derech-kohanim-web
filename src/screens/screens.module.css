@@ -1165,3 +1165,143 @@
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-semibold);
 }
+
+/* Settings ---------------------------------------------------------------- */
+/* Civic grouped lists: one hairline box per group, rows split by hairlines. */
+
+.settingsGroupWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.settingsGroupTitle {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  color: hsl(var(--color-text-muted));
+  text-align: start;
+}
+
+.settingsGroup {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid hsl(var(--color-border));
+  border-radius: var(--radius-lg);
+  background: hsl(var(--color-surface));
+  overflow: hidden;
+}
+
+.settingsGroup > * + * {
+  border-block-start: 1px solid hsl(var(--color-border));
+}
+
+.settingsRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-3) var(--space-4);
+  background: hsl(var(--color-surface));
+  color: hsl(var(--color-text));
+  text-align: start;
+}
+
+.settingsRow:hover,
+.settingsRow[data-selected='true'] {
+  background: hsl(var(--color-band));
+}
+
+.settingsRow[data-selected='true'] > svg {
+  color: hsl(var(--color-primary));
+}
+
+.settingsRadio {
+  flex: none;
+  inline-size: 18px;
+  block-size: 18px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid hsl(var(--color-border-strong));
+}
+
+.settingsRow[data-selected='true'] .settingsRadio {
+  border: 5px solid hsl(var(--color-primary));
+}
+
+.settingsSwitchRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+}
+
+.settingsInfoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 48px;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-body);
+  color: hsl(var(--color-text-body));
+  text-align: start;
+}
+
+.settingsInfoValue {
+  color: hsl(var(--color-text-muted));
+  font-variant-numeric: tabular-nums;
+}
+
+.settingsNote {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-label);
+  color: hsl(var(--color-text-muted));
+  text-align: start;
+}
+
+.settingsLink {
+  color: hsl(var(--color-primary));
+  text-decoration: none;
+}
+
+.settingsLink:hover {
+  color: hsl(var(--color-primary-hover));
+  text-decoration: underline;
+}
+
+.aboutHero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding-block: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.aboutLogo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 88px;
+  block-size: 88px;
+  border-radius: 24px;
+  background: hsl(var(--color-primary));
+  color: hsl(var(--color-primary-contrast));
+}
+
+.aboutName {
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-medium);
+  color: hsl(var(--color-text));
+}
+
+.aboutVersion {
+  font-size: var(--font-size-label);
+  color: hsl(var(--color-text-muted));
+}
+
+.aboutTagline {
+  max-width: 36ch;
+  font-size: var(--font-size-body);
+  line-height: 24px;
+  color: hsl(var(--color-text-body));
+}
