@@ -528,43 +528,61 @@
 .altList {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  border: 1px solid hsl(var(--color-border));
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 
 .altCard {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
   width: 100%;
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
+  min-height: 48px;
+  padding: var(--space-2) var(--space-3);
+  border-block-end: 1px solid hsl(var(--color-border));
   background: hsl(var(--color-surface));
-  box-shadow: inset 0 0 0 1px hsl(var(--color-border));
   text-align: start;
-  transition:
-    box-shadow var(--duration-fast) var(--easing-standard),
-    background-color var(--duration-fast) var(--easing-standard);
+  transition: background-color var(--duration-fast) var(--easing-standard);
+}
+
+.altCard:last-child {
+  border-block-end: 0;
+}
+
+.altCard::before {
+  content: '';
+  flex: none;
+  inline-size: 18px;
+  block-size: 18px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid hsl(var(--color-border-strong));
 }
 
 .altCard:hover {
-  background: hsl(var(--color-surface-muted));
+  background: hsl(var(--color-band));
 }
 
 .altCard[data-selected='true'] {
-  background: hsl(var(--color-primary) / 0.1);
-  box-shadow: inset 0 0 0 2px hsl(var(--color-primary));
+  background: hsl(var(--color-band));
+}
+
+.altCard[data-selected='true']::before {
+  border: 5px solid hsl(var(--color-primary));
 }
 
 .altTop {
+  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-3);
 }
 
 .altLabel {
   font-size: var(--font-size-body);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-medium);
+  color: hsl(var(--color-text));
 }
 
 .altMetrics {
@@ -577,9 +595,7 @@
 }
 
 .altDuration {
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-semibold);
-  color: hsl(var(--color-text));
+  color: hsl(var(--color-text-muted));
 }
 
 .unavoidedNote {
@@ -616,27 +632,36 @@
 }
 
 .metrics {
-  display: flex;
-  gap: var(--space-4);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid hsl(var(--color-border));
+  border-radius: var(--radius-md);
 }
 
 .metric {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 2px;
+  padding: 10px var(--space-3);
+  border-inline-start: 1px solid hsl(var(--color-border));
   text-align: start;
+}
+
+.metric:first-child {
+  border-inline-start: 0;
 }
 
 .metricValue {
   font-size: var(--font-size-heading);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-tight);
+  font-weight: var(--font-weight-regular);
+  line-height: 32px;
+  color: hsl(var(--color-text));
   font-variant-numeric: tabular-nums;
 }
 
 .metricLabel {
-  font-size: var(--font-size-caption);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
   color: hsl(var(--color-text-muted));
 }
 
@@ -745,6 +770,135 @@
   align-items: center;
   gap: var(--space-2);
   font-size: var(--font-size-body);
+  text-align: start;
+}
+
+/* No clean route: a Civic notice bar and a list of what the driver can do. */
+.failureNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: 14px var(--space-4);
+  border: 1px solid hsl(var(--color-danger) / 0.25);
+  border-radius: var(--radius-md);
+  background: hsl(var(--color-danger-soft));
+  text-align: start;
+}
+
+.failureNoticeIcon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border-radius: var(--radius-full);
+  background: hsl(var(--color-surface));
+  color: hsl(var(--color-danger));
+}
+
+.failureNoticeText {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--font-size-body);
+  line-height: 24px;
+  color: hsl(var(--color-text-body));
+}
+
+.failureNoticeText strong {
+  font-weight: var(--font-weight-semibold);
+  color: hsl(var(--color-danger));
+}
+
+.actionSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.actionSectionTitle {
+  font-size: var(--font-size-title);
+  line-height: 28px;
+  font-weight: var(--font-weight-medium);
+  color: hsl(var(--color-text));
+  text-align: start;
+}
+
+.actionList {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid hsl(var(--color-border));
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.actionRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-3) var(--space-4);
+  border-block-end: 1px solid hsl(var(--color-border));
+  background: hsl(var(--color-surface));
+  color: hsl(var(--color-text));
+  text-align: start;
+}
+
+.actionRow:last-child {
+  border-block-end: 0;
+}
+
+.actionRow:hover {
+  background: hsl(var(--color-band));
+}
+
+.actionChip {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border-radius: var(--radius-full);
+  background: hsl(var(--color-primary-soft));
+  color: hsl(var(--color-primary));
+}
+
+.actionChip[data-tone='danger'] {
+  background: hsl(var(--color-danger-soft));
+  color: hsl(var(--color-danger));
+}
+
+.actionText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  font-size: var(--font-size-body);
+}
+
+.actionSubtitle {
+  font-size: var(--font-size-label);
+  color: hsl(var(--color-text-muted));
+}
+
+.actionChevron {
+  flex: none;
+  color: hsl(var(--color-text-muted));
+}
+
+.routeActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.routeActionMain {
+  flex: 1;
+}
+
+.dialogBody {
+  font-size: var(--font-size-body);
+  line-height: 24px;
+  color: hsl(var(--color-text-body));
   text-align: start;
 }
 

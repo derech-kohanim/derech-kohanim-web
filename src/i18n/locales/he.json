@@ -136,6 +136,12 @@
     "locationDenied": "אין הרשאת מיקום, נעשה שימוש במיקום ברירת מחדל"
   },
   "route": {
+    "proceedConfirm": "לנסוע בכל זאת",
+    "proceedBody": "המסלול הזה עובר באזור אסור לפי רמת ההימנעות שבחרת. הנסיעה היא באחריותך. בזמן הנסיעה תקבל התראה לפני כל כניסה לאזור.",
+    "proceedTitle": "לנסוע במסלול שעובר באזור?",
+    "atOwnRisk": "באחריות הנוסע",
+    "currentLevel": "כרגע: {{level}}",
+    "failedActionsTitle": "מה אפשר לעשות",
     "title": "המסלול",
     "start": "יוצאים לדרך",
     "simulate": "הרצת סימולציה",
@@ -153,7 +159,7 @@
     "failedBody": "כל המסלולים אל היעד הזה עוברים באזור {{zone}}. אלה האפשרויות:",
     "failedOptionDestination": "לבחור יעד אחר",
     "failedOptionStringency": "לשנות את רמת החומרה",
-    "failedOptionProceed": "לנסוע ביודעין, באחריות הנוסע",
+    "failedOptionProceed": "לנסוע ביודעין",
     "proceedAnyway": "הצגה בלבד, ללא ניווט חי",
     "computing": "מחשב מסלול",
     "computingTo": "מחשב מסלול אל {{name}}",

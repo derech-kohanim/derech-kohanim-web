@@ -136,6 +136,12 @@
     "locationDenied": "Location permission denied, using a default position"
   },
   "route": {
+    "proceedConfirm": "Drive anyway",
+    "proceedBody": "This route passes through a zone forbidden at the avoidance level you chose. You drive it at your own responsibility. While driving you are alerted before every zone entry.",
+    "proceedTitle": "Drive a route that crosses a zone?",
+    "atOwnRisk": "At the driver's responsibility",
+    "currentLevel": "Currently: {{level}}",
+    "failedActionsTitle": "What you can do",
     "title": "Route",
     "start": "Start driving",
     "simulate": "Run simulation",
@@ -153,7 +159,7 @@
     "failedBody": "Every route to this destination passes through {{zone}}. Your options:",
     "failedOptionDestination": "Choose a different destination",
     "failedOptionStringency": "Change the stringency level",
-    "failedOptionProceed": "Drive knowingly, at your own responsibility",
+    "failedOptionProceed": "Drive knowingly",
     "proceedAnyway": "Show only, no live navigation",
     "computing": "Computing route",
     "computingTo": "Computing route to {{name}}",

@@ -3,13 +3,15 @@ import type { PlaceCategory } from '@dk/shared';
 import {
   AlertTriangle,
   Briefcase,
+  ChevronLeft,
   CheckCircle2,
   Clock,
   Home as HomeIcon,
   MapPin,
   PlayCircle,
   Route as RouteIcon,
-  ShieldCheck,
+  Search,
+  Shield,
   Star,
   TimerReset,
 } from 'lucide-react';
@@ -17,13 +19,12 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { api } from '@/api';
-import { CertaintyIndicator } from '@/components/certainty/CertaintyIndicator';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { MapCanvas } from '@/components/map/MapCanvas';
 import { ZoneInfoSheet } from '@/components/map/ZoneInfoSheet';
 import { ZoneLegend } from '@/components/map/ZoneLegend';
 import type { SelectedZone } from '@/components/map/types';
-import { Badge, Button, IconButton, ListItem, Sheet, Switch, useToast } from '@/components/ui';
+import { Button, Dialog, IconButton, ListItem, Sheet, Switch, useToast } from '@/components/ui';
 import { currentLanguage } from '@/i18n';
 import { analytics } from '@/lib/analytics';
 import { formatArrival, formatDistance, formatDuration } from '@/lib/format';
@@ -64,6 +65,7 @@ export function RouteReview() {
   } = useTrip();
   const language = currentLanguage();
   const requireAccount = useRequireAccount();
+  const [proceedOpen, setProceedOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const [showUnavoided, setShowUnavoided] = useState(false);
   const [selectedZone, setSelectedZone] = useState<SelectedZone | null>(null);
@@ -209,32 +211,71 @@ export function RouteReview() {
 
         {status === 'ready' && route && (
           <>
-            <CertaintyIndicator state={route.verifiedClean ? 'verified' : 'unverified'} />
-
+            {/* Every route this app offers is verified, so only the exception is announced. */}
             {!route.verifiedClean && (
-              <div className={styles.failureCard}>
-                <h2 className={styles.failureTitle}>
-                  <AlertTriangle size={22} aria-hidden />
-                  {t('route.failedTitle')}
-                </h2>
-                <p className={styles.failureOption}>
-                  {t('route.failedBody', {
-                    zone:
-                      route.maneuvers.find((maneuver) => maneuver.zone)?.zone?.[
-                        language === 'he' ? 'nameHe' : 'name'
-                      ] ?? t('map.zones'),
-                  })}
-                </p>
-                <p className={styles.failureOption}>{t('route.failedOptionDestination')}</p>
-                <p className={styles.failureOption}>{t('route.failedOptionStringency')}</p>
-                <p className={styles.failureOption}>{t('route.failedOptionProceed')}</p>
-                <div className={styles.row}>
-                  <Button onClick={() => navigate('/')}>{t('route.changeDestination')}</Button>
-                  <Button variant="outline" onClick={() => navigate('/settings')}>
-                    {t('stringency.label')}
-                  </Button>
+              <>
+                <div className={styles.failureNotice} role="alert">
+                  <span className={styles.failureNoticeIcon}>
+                    <AlertTriangle size={18} aria-hidden />
+                  </span>
+                  <span className={styles.failureNoticeText}>
+                    <strong>{t('route.failedTitle')}</strong>
+                    <span>
+                      {t('route.failedBody', {
+                        zone:
+                          route.maneuvers.find((maneuver) => maneuver.zone)?.zone?.[
+                            language === 'he' ? 'nameHe' : 'name'
+                          ] ?? t('map.zones'),
+                      })}
+                    </span>
+                  </span>
                 </div>
-              </div>
+
+                <section className={styles.actionSection}>
+                  <h2 className={styles.actionSectionTitle}>{t('route.failedActionsTitle')}</h2>
+                  <div className={styles.actionList}>
+                    <button type="button" className={styles.actionRow} onClick={() => navigate('/')}>
+                      <span className={styles.actionChip}>
+                        <Search size={18} aria-hidden />
+                      </span>
+                      <span className={styles.actionText}>{t('route.failedOptionDestination')}</span>
+                      <ChevronLeft size={16} className={styles.actionChevron} aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.actionRow}
+                      onClick={() => navigate('/settings/avoidance')}
+                    >
+                      <span className={styles.actionChip}>
+                        <Shield size={18} aria-hidden />
+                      </span>
+                      <span className={styles.actionText}>
+                        {t('route.failedOptionStringency')}
+                        <span className={styles.actionSubtitle}>
+                          {t('route.currentLevel', {
+                            level: t(`stringency.${preferences.stringency}`),
+                          })}
+                        </span>
+                      </span>
+                      <ChevronLeft size={16} className={styles.actionChevron} aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.actionRow}
+                      onClick={() => setProceedOpen(true)}
+                    >
+                      <span className={styles.actionChip} data-tone="danger">
+                        <AlertTriangle size={18} aria-hidden />
+                      </span>
+                      <span className={styles.actionText}>
+                        {t('route.failedOptionProceed')}
+                        <span className={styles.actionSubtitle}>{t('route.atOwnRisk')}</span>
+                      </span>
+                      <ChevronLeft size={16} className={styles.actionChevron} aria-hidden />
+                    </button>
+                  </div>
+                </section>
+              </>
             )}
 
             {routes.length > 1 && (
@@ -266,11 +307,6 @@ export function RouteReview() {
                                 time: formatDuration(delta, language),
                               })}
                         </span>
-                        {alt.verifiedClean && (
-                          <Badge tone="success" icon={<ShieldCheck size={14} aria-hidden />}>
-                            {t('route.verifiedClean')}
-                          </Badge>
-                        )}
                       </span>
                       <span className={styles.altMetrics}>
                         <span className={styles.altDuration}>
@@ -287,22 +323,22 @@ export function RouteReview() {
 
             <div className={styles.metrics}>
               <div className={styles.metric}>
+                <span className={styles.metricLabel}>{t('route.duration')}</span>
                 <span className={styles.metricValue}>
                   {formatDuration(route.durationSeconds, language)}
                 </span>
-                <span className={styles.metricLabel}>{t('route.duration')}</span>
               </div>
               <div className={styles.metric}>
+                <span className={styles.metricLabel}>{t('route.distance')}</span>
                 <span className={styles.metricValue}>
                   {formatDistance(route.distanceMeters, language)}
                 </span>
-                <span className={styles.metricLabel}>{t('route.distance')}</span>
               </div>
               <div className={styles.metric}>
+                <span className={styles.metricLabel}>{t('route.arrival')}</span>
                 <span className={styles.metricValue}>
                   {formatArrival(route.durationSeconds, language)}
                 </span>
-                <span className={styles.metricLabel}>{t('route.arrival')}</span>
               </div>
             </div>
 
@@ -361,10 +397,11 @@ export function RouteReview() {
               </>
             )}
 
+            <div className={styles.routeActions}>
             {route.verifiedClean && (
               <Button
                 size="large"
-                block
+                className={styles.routeActionMain}
                 onClick={() => start(false)}
                 iconStart={
                   prep.ready ? <CheckCircle2 size={20} aria-label={t('offline.ready')} /> : undefined
@@ -376,12 +413,13 @@ export function RouteReview() {
             <Button
               variant="outline"
               size="large"
-              block
+              className={route.verifiedClean ? undefined : styles.routeActionMain}
               iconStart={<PlayCircle size={20} aria-hidden />}
               onClick={() => start(true)}
             >
               {t('route.simulate')}
             </Button>
+            </div>
 
             <h2 className={styles.sectionTitle}>{t('route.maneuvers')}</h2>
             <ol className={styles.maneuverList}>
@@ -425,6 +463,31 @@ export function RouteReview() {
           </>
         )}
       </div>
+
+      <Dialog
+        open={proceedOpen}
+        onClose={() => setProceedOpen(false)}
+        title={t('route.proceedTitle')}
+        actions={
+          <>
+            <Button variant="outline" onClick={() => setProceedOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                setProceedOpen(false);
+                analytics.event('unverified_route_started', {});
+                start(false);
+              }}
+            >
+              {t('route.proceedConfirm')}
+            </Button>
+          </>
+        }
+      >
+        <p className={styles.dialogBody}>{t('route.proceedBody')}</p>
+      </Dialog>
 
       <Sheet open={saveOpen} onClose={() => setSaveOpen(false)} title={t('route.saveTitle')}>
         <ListItem
