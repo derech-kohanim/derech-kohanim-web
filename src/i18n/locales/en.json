@@ -563,6 +563,10 @@
       "save": {
         "title": "Save it for next time",
         "body": "The star saves the destination as home, work or another place. Needs an account."
+      },
+      "noClean": {
+        "title": "When there is no way around",
+        "body": "If every route passes through a zone, three options appear here: choose another destination, change the level of care, or drive knowingly. On such a drive you get an alert before the zone."
       }
     },
     "drive": {

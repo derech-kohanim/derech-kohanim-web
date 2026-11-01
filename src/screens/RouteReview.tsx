@@ -236,7 +236,7 @@ export function RouteReview() {
 
                 <section className={styles.actionSection}>
                   <h2 className={styles.actionSectionTitle}>{t('route.failedActionsTitle')}</h2>
-                  <div className={styles.actionList}>
+                  <div className={styles.actionList} data-tour="noClean">
                     <button type="button" className={styles.actionRow} onClick={() => navigate('/')}>
                       <span className={styles.actionChip}>
                         <Search size={18} aria-hidden />

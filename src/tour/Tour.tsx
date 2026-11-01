@@ -34,6 +34,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
     { id: 'done' },
   ],
   route: [
+    { id: 'noClean', target: 'noClean' },
     { id: 'alternatives', target: 'alternatives' },
     { id: 'options', target: 'options' },
     { id: 'simulate', target: 'simulate' },
@@ -118,7 +119,13 @@ interface Box {
 
 function TourOverlay({ id, onClose }: { id: TourId; onClose: (never: boolean) => void }) {
   const { t } = useTranslation();
-  const steps = TOURS[id];
+  // A step whose control is not on this screen right now (only one route, no speed limit, a
+  // clean route) is left out rather than shown pointing at nothing.
+  const [steps] = useState(() =>
+    TOURS[id].filter(
+      (s) => !s.target || document.querySelector(`[data-tour="${s.target}"]`) !== null,
+    ),
+  );
   const [index, setIndex] = useState(0);
   const [never, setNever] = useState(false);
   const [box, setBox] = useState<Box | null>(null);
