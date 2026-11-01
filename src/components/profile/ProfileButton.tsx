@@ -28,6 +28,8 @@ export function ProfileButton() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  // A picture URL that no longer loads (revoked or offline) falls back to the initials.
+  const [failedAvatar, setFailedAvatar] = useState<string | null>(null);
 
   if (!user) {
     // On phones the label is dropped and the control collapses to the icon, so the destination
@@ -65,7 +67,7 @@ export function ProfileButton() {
         aria-expanded={menuOpen}
         onClick={() => setMenuOpen(true)}
       >
-        {user.avatarUrl ? (
+        {user.avatarUrl && failedAvatar !== user.avatarUrl ? (
           // Not a drag source: over the map, dragging the avatar out as a ghost image would
           // both look wrong and steal the pan. `-webkit-user-drag` does not cover Firefox.
           <img
@@ -74,6 +76,7 @@ export function ProfileButton() {
             alt=""
             referrerPolicy="no-referrer"
             draggable={false}
+            onError={() => setFailedAvatar(user.avatarUrl ?? null)}
           />
         ) : (
           <span className={styles.avatarInitials} aria-hidden>
