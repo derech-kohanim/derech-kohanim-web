@@ -47,7 +47,7 @@
 
 .title {
   font-size: var(--font-size-heading);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
   text-align: start;
 }
@@ -626,7 +626,7 @@
 
 .metricValue {
   font-size: var(--font-size-heading);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
   font-variant-numeric: tabular-nums;
 }
@@ -731,7 +731,7 @@
   align-items: center;
   gap: var(--space-2);
   font-size: var(--font-size-title);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   color: hsl(var(--color-danger));
   text-align: start;
 }
@@ -790,7 +790,7 @@
 
 .navDistance {
   font-size: var(--font-size-nav-primary);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
   font-variant-numeric: tabular-nums;
   font-family: var(--font-nav);
@@ -875,7 +875,7 @@
 
 .navMetricValue {
   font-size: var(--font-size-title);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   font-variant-numeric: tabular-nums;
   line-height: var(--line-height-tight);
 }

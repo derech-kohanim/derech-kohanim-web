@@ -12,7 +12,7 @@
 .headerTitle {
   flex: 1;
   font-size: var(--font-size-title);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   text-align: start;
   padding-inline: var(--space-2);
 }

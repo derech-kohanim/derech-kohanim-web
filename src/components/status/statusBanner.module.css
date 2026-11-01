@@ -16,7 +16,7 @@
   background: #000;
   color: #ff3b30;
   font-size: var(--font-size-label);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
   box-shadow: var(--elevation-md);
 }

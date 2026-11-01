@@ -584,7 +584,7 @@
 .sheetTitle {
   flex: 1;
   font-size: var(--font-size-title);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   text-align: start;
 }
 
@@ -638,7 +638,7 @@
 
 .dialogTitle {
   font-size: var(--font-size-title);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   text-align: start;
 }
 

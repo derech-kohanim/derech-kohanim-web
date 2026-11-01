@@ -139,7 +139,7 @@
 .mark {
   background: none;
   color: hsl(var(--color-primary));
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
 }
 
 .distance {

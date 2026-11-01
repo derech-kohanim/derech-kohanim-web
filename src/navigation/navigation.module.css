@@ -232,7 +232,7 @@
   background: #fff;
   color: #111;
   font-size: var(--font-size-title);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   font-variant-numeric: tabular-nums;
   line-height: 1;
   box-shadow: var(--elevation-lg);
@@ -249,7 +249,7 @@
 
 .speedoValue {
   font-size: var(--font-size-title);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
