@@ -126,6 +126,7 @@
     "zoneAheadDetail": "The route is clean but passes close to a zone"
   },
   "home": {
+    "avoidanceLevel": "Avoidance level:",
     "greeting": "Where are you going",
     "saved": "Saved places",
     "recent": "Recent",

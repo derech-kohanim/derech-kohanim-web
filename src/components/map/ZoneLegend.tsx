@@ -11,16 +11,19 @@ import styles from './map.module.css';
 const LAYERS: Stringency[] = ['basic', 'taharat', 'machmirim'];
 
 /**
- * Explains the three zone colours. On narrow viewports it collapses to a toggle so it never
- * covers the map; on wide viewports the panel stays visible and the toggle is hidden.
+ * Explains the zone colours. A small corner button opens the legend as a popover, on every
+ * viewport, so it never covers the map until asked for.
  */
 export function ZoneLegend({
   className,
   showDanger = false,
+  placement = 'down',
 }: {
   className?: string;
   /** Adds the danger-zone (Area A) row when danger zones are present on the map. */
   showDanger?: boolean;
+  /** Which way the panel opens from the button. */
+  placement?: 'up' | 'down';
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -28,10 +31,11 @@ export function ZoneLegend({
 
   return (
     // Map chrome: never selectable, so dragging across the legend still pans the map.
-    <div className={cn(styles.legendWrap, 'dk-no-select', className)}>
+    <div className={cn(styles.legendWrap, 'dk-no-select', className)} data-placement={placement}>
       <IconButton
         label={t('map.legendTitle')}
         variant="solid"
+        size="large"
         className={styles.legendToggle}
         icon={<Layers size={20} />}
         aria-expanded={open}

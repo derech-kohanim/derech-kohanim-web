@@ -122,7 +122,11 @@ export function Home() {
             floating={false}
           />
           {(nearbyZones.zones.length > 0 || nearbyZones.danger.length > 0) && (
-            <ZoneLegend className={styles.homeLegend} showDanger={nearbyZones.danger.length > 0} />
+            <ZoneLegend
+              className={styles.homeLegend}
+              showDanger={nearbyZones.danger.length > 0}
+              placement="up"
+            />
           )}
           {env.mock && (
             <span className={styles.mockBanner}>
@@ -160,6 +164,7 @@ export function Home() {
             onClick={() => navigate('/settings')}
           >
             <Shield size={18} aria-hidden />
+            <span className={styles.stringencyPillLabel}>{t('home.avoidanceLevel')}</span>
             {t(`stringency.${preferences.stringency}`)}
           </button>
         </div>

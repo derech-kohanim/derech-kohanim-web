@@ -126,6 +126,7 @@
     "zoneAheadDetail": "המסלול נקי אך חולף בסמוך לאזור"
   },
   "home": {
+    "avoidanceLevel": "רמת הימנעות:",
     "greeting": "לאן נוסעים",
     "saved": "מקומות שמורים",
     "recent": "אחרונים",
