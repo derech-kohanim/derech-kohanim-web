@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { api } from '@/api';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
-import { Button, Card, Markdown, Skeleton } from '@/components/ui';
+import { AppLoader, Button, Card, Markdown } from '@/components/ui';
 import { env } from '@/env';
 import { currentLanguage } from '@/i18n';
 
@@ -80,11 +80,7 @@ function DocumentPage({ title, body, updatedAt, notice, loading, footer }: Docum
       <div className="dk-screen__body">
         <Card>
           {loading ? (
-            <div className={styles.stackTight}>
-              <Skeleton height="var(--space-4)" />
-              <Skeleton height="var(--space-4)" width="80%" />
-              <Skeleton height="var(--space-4)" width="60%" />
-            </div>
+            <AppLoader label={t('common.loading')} />
           ) : (
             <>
               {updated && <p className={styles.choiceHint}>{t('legal.updated', { date: updated })}</p>}

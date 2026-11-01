@@ -173,7 +173,8 @@ function Viewport({ onChange }: { onChange?: (bounds: GeoBox) => void }) {
 
     return () => {
       window.clearTimeout(timer);
-      listeners.forEach((listener) => listener.remove());
+      // A map whose API failed to load (bad key, a filtered network) hands back no listener.
+      listeners.forEach((listener) => listener?.remove());
     };
   }, [map, onChange]);
 
@@ -532,7 +533,7 @@ function Camera({
   useEffect(() => {
     if (!map || !onCameraChange) return;
     const listener = map.addListener('dragstart', () => onCameraChange({ follow: false }));
-    return () => listener.remove();
+    return () => listener?.remove();
   }, [map, onCameraChange]);
 
   // Same idea for the zoom: a pinch while following pins the zoom, so the automatic driving
@@ -546,7 +547,7 @@ function Camera({
       appliedZoom.current = zoom;
       onCameraChange({ zoom, autoZoom: false });
     });
-    return () => listener.remove();
+    return () => listener?.remove();
   }, [map, onCameraChange, following]);
 
   // Frames the trip: the route and its endpoints. Deliberately not keyed on the zones - the drawn

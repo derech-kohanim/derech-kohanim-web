@@ -17,7 +17,7 @@ import { api } from '@/api';
 import appIcon from '@/assets/images/app-icon.png';
 import developerLogo from '@/assets/images/developer-abaye.webp';
 import { TAHARAT_EMAIL, TAHARAT_PHONE } from '@/lib/contacts';
-import { Button, Card, Markdown, Skeleton, Switch } from '@/components/ui';
+import { AppLoader, Button, Card, Markdown, Switch } from '@/components/ui';
 import { currentLanguage } from '@/i18n';
 import { useAuth } from '@/state/AuthProvider';
 import { usePreferences } from '@/state/PreferencesProvider';
@@ -222,11 +222,7 @@ export function Onboarding() {
                     {!termsRead && <p className={styles.termsHint}>{t('onboarding.termsScrollHint')}</p>}
                   </>
                 ) : (
-                  <div className={styles.stackTight}>
-                    <Skeleton height="var(--space-4)" />
-                    <Skeleton height="var(--space-4)" width="80%" />
-                    <Skeleton height="var(--space-4)" width="60%" />
-                  </div>
+                  <AppLoader label={t('common.loading')} />
                 )}
                 <Switch
                   checked={accepted}

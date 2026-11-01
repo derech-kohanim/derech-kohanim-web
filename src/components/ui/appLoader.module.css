@@ -1,0 +1,90 @@
+/* App loader: the icon hops and lands, its shadow tightening as it rises. */
+
+.root {
+  --size: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block: var(--space-4);
+}
+
+.root--small {
+  --size: 40px;
+  padding-block: var(--space-2);
+}
+
+.root--large {
+  --size: 88px;
+}
+
+.stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  block-size: calc(var(--size) * 1.45);
+  justify-content: flex-end;
+}
+
+.icon {
+  inline-size: var(--size);
+  block-size: var(--size);
+  border-radius: 26%;
+  animation: hop 1.15s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  transform-origin: 50% 100%;
+}
+
+.shadow {
+  inline-size: calc(var(--size) * 0.62);
+  block-size: calc(var(--size) * 0.12);
+  margin-block-start: calc(var(--size) * 0.06);
+  border-radius: 50%;
+  background: hsl(219 38% 9% / 0.18);
+  animation: shadow 1.15s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.label {
+  font-size: var(--font-size-body);
+  color: hsl(var(--color-text-muted));
+  text-align: center;
+}
+
+@keyframes hop {
+  0%,
+  100% {
+    transform: translateY(0) scale(1.04, 0.96);
+  }
+  12% {
+    transform: translateY(0) scale(1, 1);
+  }
+  50% {
+    transform: translateY(calc(var(--size) * -0.38)) scale(0.98, 1.02);
+  }
+  88% {
+    transform: translateY(0) scale(1, 1);
+  }
+}
+
+@keyframes shadow {
+  0%,
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scaleX(0.55);
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon,
+  .shadow {
+    animation: none;
+  }
+
+  .icon {
+    opacity: 0.85;
+  }
+}

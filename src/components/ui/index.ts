@@ -1,3 +1,4 @@
+export { AppLoader } from './AppLoader';
 export { Badge, type BadgeTone } from './Badge';
 export { Button, type ButtonProps, type ButtonVariant } from './Button';
 export { Card, CardSubtitle, CardTitle } from './Card';
