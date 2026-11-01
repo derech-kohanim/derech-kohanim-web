@@ -1307,3 +1307,44 @@
   line-height: 24px;
   color: hsl(var(--color-text-body));
 }
+
+.developerCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-block: 1px solid hsl(var(--color-border));
+  text-align: center;
+}
+
+.developerLogo {
+  inline-size: 64px;
+  block-size: 64px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+}
+
+.developerName {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: hsl(var(--color-text));
+}
+
+.developerSite {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding-inline: var(--space-4);
+  border: 1px solid hsl(var(--color-border-strong));
+  border-radius: var(--radius-full);
+  color: hsl(var(--color-primary));
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+}
+
+.developerSite:hover {
+  background: hsl(var(--color-band));
+}

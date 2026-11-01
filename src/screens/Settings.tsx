@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   Database,
   FileText,
+  Globe,
   Info,
   LogIn,
   LogOut,
@@ -19,6 +20,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
+import developerLogo from '@/assets/images/developer-abaye.webp';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button, Dialog, Select, Switch } from '@/components/ui';
 import { env } from '@/env';
@@ -452,6 +454,20 @@ function AboutSection() {
           {t('settings.version')} <bdi dir="ltr">{__APP_VERSION__}</bdi>
         </span>
         <p className={styles.aboutTagline}>{t('settings.aboutTagline')}</p>
+      </div>
+
+      <div className={styles.developerCard}>
+        <img className={styles.developerLogo} src={developerLogo} alt="abaye" />
+        <span className={styles.developerName}>{t('settings.developedBy')}</span>
+        <a
+          className={styles.developerSite}
+          href="https://abaye.co"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <Globe size={16} aria-hidden />
+          <bdi dir="ltr">abaye.co</bdi>
+        </a>
       </div>
 
       <Group>

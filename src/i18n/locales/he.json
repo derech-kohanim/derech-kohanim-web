@@ -307,6 +307,7 @@
     "railGuarded": "עם מחסום"
   },
   "settings": {
+    "developedBy": "פיתוח: abaye",
     "chooseLevelTitle": "בחירת רמת הימנעות",
     "section": {"avoidance": "הימנעות ומסלול", "voice": "קול והנחיות", "display": "תצוגה ושפה", "data": "נתוני אזורים", "account": "חשבון", "about": "אודות ומידע משפטי"},
     "voiceOnSummary": "הנחיות קוליות פעילות",
