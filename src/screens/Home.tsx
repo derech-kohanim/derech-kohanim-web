@@ -15,6 +15,7 @@ import { referenceBounds } from '@/lib/zoneFilter';
 import { ProfileButton } from '@/components/profile/ProfileButton';
 import { DestinationSearch } from '@/components/search/DestinationSearch';
 import { StatusBanner } from '@/components/status/StatusBanner';
+import { StringencyDialog } from '@/screens/Settings';
 import { IconButton, useToast } from '@/components/ui';
 import { env } from '@/env';
 import { useConnectivity } from '@/lib/useConnectivity';
@@ -38,6 +39,7 @@ export function Home() {
   const [saved, setSaved] = useState<SavedPlace[]>([]);
   const [camera, setCamera] = useState<MapCamera>(HOME_CAMERA);
   const [selectedZone, setSelectedZone] = useState<SelectedZone | null>(null);
+  const [levelOpen, setLevelOpen] = useState(false);
 
   // Only the zones the map is actually showing: the country-wide layers follow the camera, so
   // panning or zooming out reveals the zones there instead of leaving the area blank. Until the
@@ -87,6 +89,7 @@ export function Home() {
       </div>
 
       <ZoneInfoSheet selection={selectedZone} onClose={() => setSelectedZone(null)} />
+      <StringencyDialog open={levelOpen} onClose={() => setLevelOpen(false)} />
 
       {/* Everything floating over the map is unselectable, so a drag on (or across) the chrome
           never becomes a text selection that swallows the pan. The search input opts back in. */}
@@ -161,7 +164,7 @@ export function Home() {
             type="button"
             className={styles.stringencyPill}
             data-stringency={preferences.stringency}
-            onClick={() => navigate('/settings/avoidance')}
+            onClick={() => setLevelOpen(true)}
           >
             <Shield size={18} aria-hidden />
             <span className={styles.stringencyPillLabel}>{t('home.avoidanceLevel')}</span>

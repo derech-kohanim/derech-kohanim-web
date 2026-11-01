@@ -307,6 +307,7 @@
     "railGuarded": "with barrier"
   },
   "settings": {
+    "chooseLevelTitle": "Choose the avoidance level",
     "section": {"avoidance": "Avoidance and route", "voice": "Voice and guidance", "display": "Display and language", "data": "Zone data", "account": "Account", "about": "About and legal"},
     "voiceOnSummary": "Voice guidance on",
     "voiceOffSummary": "Voice guidance off",

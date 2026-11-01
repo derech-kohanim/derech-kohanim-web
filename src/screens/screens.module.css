@@ -1184,6 +1184,7 @@
 }
 
 .settingsGroup {
+  flex: none;
   display: flex;
   flex-direction: column;
   border: 1px solid hsl(var(--color-border));

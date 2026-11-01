@@ -158,38 +158,17 @@ export function SettingsSection() {
 function AvoidanceSection() {
   const { t } = useTranslation();
   const { preferences, update } = usePreferences();
-  // Lowering the level shows more of the map as drivable, so it is confirmed first.
-  const [pending, setPending] = useState<Stringency | null>(null);
-
-  function choose(level: Stringency) {
-    if (level === preferences.stringency) return;
-    if (LEVELS.indexOf(level) < LEVELS.indexOf(preferences.stringency)) {
-      setPending(level);
-      return;
-    }
-    update({ stringency: level });
-  }
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   return (
     <>
       <Group title={t('stringency.label')}>
-        {LEVELS.map((level) => (
-          <button
-            key={level}
-            type="button"
-            className={styles.settingsRow}
-            data-selected={preferences.stringency === level}
-            aria-pressed={preferences.stringency === level}
-            onClick={() => choose(level)}
-          >
-            <span className={styles.settingsRadio} aria-hidden />
-            <span className={styles.actionText}>
-              {t(`stringency.${level}`)}
-              <span className={styles.actionSubtitle}>{t(LEVEL_HINT[level])}</span>
-            </span>
-            {preferences.stringency === level && <Check size={18} aria-hidden />}
-          </button>
-        ))}
+        <NavRow
+          icon={<Shield size={18} aria-hidden />}
+          title={t(`stringency.${preferences.stringency}`)}
+          subtitle={t(LEVEL_HINT[preferences.stringency])}
+          onClick={() => setPickerOpen(true)}
+        />
       </Group>
 
       <Group title={t('settings.routeOptions')}>
@@ -219,35 +198,95 @@ function AvoidanceSection() {
         </div>
       </Group>
 
-      <Dialog
-        open={pending !== null}
-        onClose={() => setPending(null)}
-        title={t('settings.lowerLevelTitle')}
-        actions={
-          <>
-            <Button variant="outline" onClick={() => setPending(null)}>
-              {t('common.cancel')}
-            </Button>
-            <Button
-              onClick={() => {
-                if (pending) update({ stringency: pending });
-                setPending(null);
-              }}
-            >
-              {t('settings.lowerLevelConfirm')}
-            </Button>
-          </>
-        }
-      >
-        <p className={styles.dialogBody}>
-          {pending &&
-            t('settings.lowerLevelBody', {
-              from: t(`stringency.${preferences.stringency}`),
-              to: t(`stringency.${pending}`),
-            })}
-        </p>
-      </Dialog>
+      <StringencyDialog open={pickerOpen} onClose={() => setPickerOpen(false)} />
     </>
+  );
+}
+
+/**
+ * The avoidance level is chosen in its own dialog: the choice is a draft until Save, and saving
+ * a less strict level than the current one asks once more before it applies.
+ */
+export function StringencyDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
+  const { preferences, update } = usePreferences();
+  const [draft, setDraft] = useState<Stringency>(preferences.stringency);
+  const [confirmLower, setConfirmLower] = useState(false);
+
+  // Each opening starts from the saved level.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setDraft(preferences.stringency);
+      setConfirmLower(false);
+    }
+  }
+
+  const lowering = LEVELS.indexOf(draft) < LEVELS.indexOf(preferences.stringency);
+
+  function save() {
+    if (draft === preferences.stringency) {
+      onClose();
+      return;
+    }
+    if (lowering && !confirmLower) {
+      setConfirmLower(true);
+      return;
+    }
+    update({ stringency: draft });
+    onClose();
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title={confirmLower ? t('settings.lowerLevelTitle') : t('settings.chooseLevelTitle')}
+      actions={
+        <>
+          <Button
+            variant="outline"
+            onClick={() => (confirmLower ? setConfirmLower(false) : onClose())}
+          >
+            {confirmLower ? t('common.back') : t('common.cancel')}
+          </Button>
+          <Button onClick={save}>
+            {confirmLower ? t('settings.lowerLevelConfirm') : t('common.save')}
+          </Button>
+        </>
+      }
+    >
+      {confirmLower ? (
+        <p className={styles.dialogBody}>
+          {t('settings.lowerLevelBody', {
+            from: t(`stringency.${preferences.stringency}`),
+            to: t(`stringency.${draft}`),
+          })}
+        </p>
+      ) : (
+        <div className={styles.settingsGroup} role="radiogroup" aria-label={t('stringency.label')}>
+          {LEVELS.map((level) => (
+            <button
+              key={level}
+              type="button"
+              role="radio"
+              aria-checked={draft === level}
+              className={styles.settingsRow}
+              data-selected={draft === level}
+              onClick={() => setDraft(level)}
+            >
+              <span className={styles.settingsRadio} aria-hidden />
+              <span className={styles.actionText}>
+                {t(`stringency.${level}`)}
+                <span className={styles.actionSubtitle}>{t(LEVEL_HINT[level])}</span>
+              </span>
+              {draft === level && <Check size={18} aria-hidden />}
+            </button>
+          ))}
+        </div>
+      )}
+    </Dialog>
   );
 }
 
