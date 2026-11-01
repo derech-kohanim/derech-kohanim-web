@@ -50,6 +50,7 @@ export function Onboarding() {
   const [step, setStep] = useState(0);
   const [terms, setTerms] = useState<TermsDocument | null>(null);
   const [accepted, setAccepted] = useState(false);
+  const [termsRead, setTermsRead] = useState(false);
   const [showError, setShowError] = useState(false);
 
   useEffect(() => {
@@ -197,14 +198,29 @@ export function Onboarding() {
               <Card>
                 <h2 className={styles.title}>{t('onboarding.termsTitle')}</h2>
                 {terms ? (
-                  <div className={`${styles.terms} ${styles.termsTall}`}>
-                    {termsBody ? (
-                      /* The document is authored in Markdown on the server. */
-                      <Markdown source={termsBody} />
-                    ) : (
-                      t('onboarding.termsEmpty')
-                    )}
-                  </div>
+                  <>
+                    <div className={styles.termsScroll} data-more={!termsRead}>
+                      <div
+                        className={`${styles.terms} ${styles.termsTall}`}
+                        onScroll={(event) => {
+                          const box = event.currentTarget;
+                          if (box.scrollTop + box.clientHeight >= box.scrollHeight - 8) setTermsRead(true);
+                        }}
+                        ref={(box) => {
+                          // Short enough to need no scrolling: already read.
+                          if (box && box.scrollHeight <= box.clientHeight + 8 && !termsRead) setTermsRead(true);
+                        }}
+                      >
+                        {termsBody ? (
+                          /* The document is authored in Markdown on the server. */
+                          <Markdown source={termsBody} />
+                        ) : (
+                          t('onboarding.termsEmpty')
+                        )}
+                      </div>
+                    </div>
+                    {!termsRead && <p className={styles.termsHint}>{t('onboarding.termsScrollHint')}</p>}
+                  </>
                 ) : (
                   <div className={styles.stackTight}>
                     <Skeleton height="var(--space-4)" />

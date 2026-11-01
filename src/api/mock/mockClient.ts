@@ -537,6 +537,12 @@ export const mockClient: ApiClient = {
     };
   },
 
+  async submitSupportReport(body) {
+    await delay(300);
+    void body;
+    return { id: `report-${Date.now()}`, reference: 101, merged: false };
+  },
+
   async voiceManifest(language, voiceId) {
     await delay(140);
     // No audio files ship with the fixtures, so the client falls through to speech synthesis.

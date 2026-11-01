@@ -10,6 +10,7 @@ import { Login } from '@/screens/Login';
 import { Navigation } from '@/screens/Navigation';
 import { Onboarding } from '@/screens/Onboarding';
 import { Register } from '@/screens/Register';
+import { Report } from '@/screens/Report';
 import { RouteReview } from '@/screens/RouteReview';
 import { SavedPlaces } from '@/screens/SavedPlaces';
 import { Settings, SettingsSection } from '@/screens/Settings';
@@ -76,6 +77,7 @@ export function App() {
                   </RequireOnboarding>
                 }
               />
+              <Route path="/report" element={<Report />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/settings/:section" element={<SettingsSection />} />
               <Route

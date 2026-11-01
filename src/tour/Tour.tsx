@@ -27,6 +27,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
   home: [
     { id: 'search', target: 'search' },
     { id: 'zone', clear: true },
+    { id: 'zoneReport', clear: true },
     { id: 'legend', target: 'legend' },
     { id: 'level', target: 'level' },
     { id: 'locate', target: 'locate' },
@@ -39,17 +40,20 @@ export const TOURS: Record<TourId, TourStep[]> = {
     { id: 'options', target: 'options' },
     { id: 'simulate', target: 'simulate' },
     { id: 'save', target: 'save' },
+    { id: 'report', target: 'report' },
   ],
   drive: [
     { id: 'banner', target: 'banner' },
     { id: 'speed', target: 'speed' },
     { id: 'voice', target: 'voice' },
     { id: 'steps', target: 'steps' },
+    { id: 'flag', target: 'flag' },
   ],
 };
 
 const SEEN_KEY = (id: TourId) => `dk.tour.seen.${id}`;
 const NEVER_KEY = 'dk.tour.never';
+const NO_CLEAN_KEY = 'dk.tour.seen.route-noClean';
 
 function read(key: string): string | null {
   try {
@@ -76,6 +80,7 @@ export function tourPending(id: TourId): boolean {
 export function resetTours(): void {
   write(NEVER_KEY, null);
   (Object.keys(TOURS) as TourId[]).forEach((id) => write(SEEN_KEY(id), null));
+  write(NO_CLEAN_KEY, null);
 }
 
 /**
@@ -99,8 +104,11 @@ export function useTour(id: TourId, ready: boolean) {
   }, [id, ready]);
 
   const close = useCallback(
-    (never: boolean) => {
-      write(SEEN_KEY(id), '1');
+    (never: boolean, shown: TourStep[]) => {
+      // A tour counts as seen only once it has shown its regular steps. If all it could show was
+      // the no-clean-route step, only that step is retired and the tour stays pending.
+      if (shown.every((step) => step.id === 'noClean')) write(NO_CLEAN_KEY, '1');
+      else write(SEEN_KEY(id), '1');
       if (never) write(NEVER_KEY, '1');
       setActive(false);
     },
@@ -117,15 +125,24 @@ interface Box {
   height: number;
 }
 
-function TourOverlay({ id, onClose }: { id: TourId; onClose: (never: boolean) => void }) {
+function TourOverlay({
+  id,
+  onClose: close,
+}: {
+  id: TourId;
+  onClose: (never: boolean, shown: TourStep[]) => void;
+}) {
   const { t } = useTranslation();
   // A step whose control is not on this screen right now (only one route, no speed limit, a
   // clean route) is left out rather than shown pointing at nothing.
   const [steps] = useState(() =>
     TOURS[id].filter(
-      (s) => !s.target || document.querySelector(`[data-tour="${s.target}"]`) !== null,
+      (s) =>
+        (!s.target || document.querySelector(`[data-tour="${s.target}"]`) !== null) &&
+        !(s.id === 'noClean' && read(NO_CLEAN_KEY) !== null),
     ),
   );
+  const onClose = (never: boolean) => close(never, steps);
   const [index, setIndex] = useState(0);
   const [never, setNever] = useState(false);
   const [box, setBox] = useState<Box | null>(null);
@@ -138,7 +155,7 @@ function TourOverlay({ id, onClose }: { id: TourId; onClose: (never: boolean) =>
     let frame = 0;
     let until = performance.now() + 1200;
     function measure() {
-      const element = step.target
+      const element = step?.target
         ? document.querySelector<HTMLElement>(`[data-tour="${step.target}"]`)
         : null;
       if (element) {
@@ -179,12 +196,15 @@ function TourOverlay({ id, onClose }: { id: TourId; onClose: (never: boolean) =>
   // The card goes on the side of the screen with more room.
   const below = box ? box.top + box.height / 2 < window.innerHeight / 2 : false;
   const cardStyle: React.CSSProperties = !box
-    ? step.clear
+    ? step?.clear
       ? { bottom: 96 }
       : { top: '50%', transform: 'translateY(-50%)' }
     : below
       ? { top: Math.min(box.top + box.height + pad + 12, window.innerHeight - 200) }
       : { bottom: Math.max(window.innerHeight - box.top + pad + 12, 16) };
+
+  // Nothing on this screen to show (every step's control is absent).
+  if (!step) return null;
 
   return createPortal(
     <div className={styles.layer} role="dialog" aria-modal="true" aria-labelledby="tour-title">

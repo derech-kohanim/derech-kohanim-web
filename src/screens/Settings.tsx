@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   Database,
   FileText,
+  Flag,
   Globe,
   Info,
   Layers,
@@ -148,7 +149,7 @@ export function Settings() {
                 onClick={() => navigate(`/settings/${section}`)}
               />
             );
-            // Saved places is a destination of its own, listed just above the guide.
+            // Saved places and reports are destinations of their own, listed above the guide.
             return section === 'guide'
               ? [
                   <NavRow
@@ -163,6 +164,13 @@ export function Settings() {
                         : t('saved.needsAccount')
                     }
                     onClick={() => navigate('/saved')}
+                  />,
+                  <NavRow
+                    key="report"
+                    icon={<Flag size={18} aria-hidden />}
+                    title={t('report.title')}
+                    subtitle={t('report.menuSummary')}
+                    onClick={() => navigate('/report')}
                   />,
                   row,
                 ]
@@ -576,6 +584,7 @@ const TIPS: { key: string; icon: typeof Shield }[] = [
   { key: 'noClean', icon: AlertTriangle },
   { key: 'account', icon: User },
   { key: 'offline', icon: RouteIcon },
+  { key: 'report', icon: Flag },
 ];
 
 /** Guide and tips: replay the tours, and every tip in one list. */

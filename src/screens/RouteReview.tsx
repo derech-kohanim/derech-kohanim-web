@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   Briefcase,
   ChevronLeft,
+  Flag,
   CheckCircle2,
   Clock,
   Home as HomeIcon,
@@ -33,6 +34,7 @@ import { useVisibleZones } from '@/lib/useVisibleZones';
 import { referenceBounds } from '@/lib/zoneFilter';
 import { useNavPrep } from '@/navigation/useNavPrep';
 import { useTour } from '@/tour/Tour';
+import type { ReportContext } from '@/screens/Report';
 import { usePreferences } from '@/state/PreferencesProvider';
 import { useTrip } from '@/state/TripProvider';
 import { useRequireAccount } from '@/state/useRequireAccount';
@@ -158,12 +160,22 @@ export function RouteReview() {
         backTo="/"
         actions={
           destination ? (
+            <>
+            <IconButton
+              data-tour="report"
+              label={t('report.routeAction')}
+              icon={<Flag size={22} />}
+              onClick={() =>
+                navigate('/report', { state: { kind: 'route', routeId: route?.id } satisfies ReportContext })
+              }
+            />
             <IconButton
               data-tour="save"
               label={t('route.addFavorite')}
               icon={<Star size={22} />}
               onClick={() => requireAccount(() => setSaveOpen(true))}
             />
+            </>
           ) : undefined
         }
       />

@@ -10,6 +10,8 @@ import type {
   LoginRequest,
   NavFeedback,
   NavFeedbackRequest,
+  SupportReportRequest,
+  SupportReportResponse,
   NavigationProgressRequest,
   NavigationProgressResponse,
   NavigationSession,
@@ -99,6 +101,8 @@ export interface ApiClient {
   endNavigation(sessionId: string, arrived: boolean): Promise<void>;
   /** Anonymous for guests; associated with the signed-in user server-side. */
   submitNavFeedback(body: NavFeedbackRequest): Promise<NavFeedback>;
+  /** A report or feedback from a signed-in user (filed as a support issue). */
+  submitSupportReport(body: SupportReportRequest): Promise<SupportReportResponse>;
 
   voiceManifest(language: Language, voiceId: string): Promise<VoicePackManifest>;
   resolveVoiceClips(body: VoiceResolveRequest): Promise<VoiceResolveResponse>;

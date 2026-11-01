@@ -59,7 +59,8 @@
     "mustAccept": "You must accept the terms to continue",
     "dataReport": "To report a problem with the forbidden-zone data, contact them or send a report from the app.",
     "orEmail": "or by email at",
-    "madeBy": "Developed by abaye"
+    "madeBy": "Developed by abaye",
+    "termsScrollHint": "Scroll to read the full terms"
   },
   "auth": {
     "loginTitle": "Sign in",
@@ -406,6 +407,10 @@
       "offline": {
         "title": "Without signal",
         "body": "A route that was already computed keeps working, voice guidance and alerts included."
+      },
+      "report": {
+        "title": "Spotted a mistake?",
+        "body": "From a zone card, or in Settings under \"Report and feedback\". Needs an account."
       }
     }
   },
@@ -545,6 +550,10 @@
       "done": {
         "title": "That's it, off you go",
         "body": "You can open the tour and the tips again any time, in Settings under \"Guide and tips\"."
+      },
+      "zoneReport": {
+        "title": "Spotted a mistake in a zone?",
+        "body": "Every zone card has \"Is there a mistake in this zone?\". The report reaches us and is checked."
       }
     },
     "route": {
@@ -567,6 +576,10 @@
       "noClean": {
         "title": "When there is no way around",
         "body": "If every route passes through a zone, three options appear here: choose another destination, change the level of care, or drive knowingly. On such a drive you get an alert before the zone."
+      },
+      "report": {
+        "title": "Something doesn't look right?",
+        "body": "Report a problem with the route here. The route's details are attached automatically."
       }
     },
     "drive": {
@@ -585,7 +598,63 @@
       "steps": {
         "title": "Every turn in a list",
         "body": "All the turns to the destination, including the zones the route avoids."
+      },
+      "flag": {
+        "title": "Flag a problem on the way",
+        "body": "One tap marks the spot, no typing. After the drive we ask whether you want to describe it."
       }
     }
+  },
+  "report": {
+    "title": "Report and feedback",
+    "menuSummary": "A problem with the app, a route or the zone data",
+    "guestTitle": "Sign in to send a report",
+    "guestBody": "Reports reach the development team, and this way we can get back to you if needed.",
+    "kindTitle": "What is it about?",
+    "kinds": {
+      "bug": {
+        "title": "A problem with the app",
+        "hint": "Something does not work or does not look right"
+      },
+      "route": {
+        "title": "A problem with a route",
+        "hint": "Navigation chose a wrong road or passed through a zone"
+      },
+      "data": {
+        "title": "A mistake in the zone data",
+        "hint": "A zone is missing, unnecessary or inaccurate"
+      },
+      "suggestion": {
+        "title": "A suggestion or feedback",
+        "hint": "An idea for improvement, or just a kind word"
+      }
+    },
+    "dataNote": "The zone data is published by the Taharat HaKohanim association. We will pass the report on for review; you can also contact them directly by phone at",
+    "messageTitle": "What happened?",
+    "placeholders": {
+      "bug": "What were you trying to do, and what happened?",
+      "route": "Where on the way, and what was wrong?",
+      "data": "Which place, and what needs fixing?",
+      "suggestion": "What would you like to see?"
+    },
+    "attachedRoute": "Attached: the route",
+    "attachedZone": "Attached: the zone {{name}}",
+    "attachedMark": "Attached: the place you marked",
+    "replyByEmail": "You may reply to me by email ({{email}})",
+    "fineprint": "The app version and the device type are sent with the report.",
+    "send": "Send",
+    "thanksTitle": "Thanks, your report was received",
+    "thanksReference": "Reference: #{{reference}}",
+    "thanksKept": "The report was saved and will be handled soon.",
+    "rateLimited": "You sent several reports in the last hour. Please try again later.",
+    "failed": "Sending failed. Check your connection and try again.",
+    "routeAction": "Report a problem with this route",
+    "zoneAction": "Is there a mistake in this zone?",
+    "flagAction": "Flag a problem",
+    "flagged": "Flagged. We will ask you after the drive.",
+    "markedPrompt_one": "You flagged a problem on the way. Want to describe it?",
+    "markedPrompt_other": "You flagged {{count}} problems on the way. Want to describe them?",
+    "markedDescribe": "Describe",
+    "markedLater": "Not now"
   }
 }

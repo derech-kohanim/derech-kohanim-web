@@ -1,9 +1,11 @@
 import type { Stringency } from '@dk/shared';
-import { MapPin, ShieldAlert, Signpost, TriangleAlert } from 'lucide-react';
+import { Flag, MapPin, ShieldAlert, Signpost, TriangleAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import { Sheet } from '@/components/ui';
 import { cn } from '@/lib/cn';
+import type { ReportContext } from '@/screens/Report';
 
 import type { SelectedZone } from './types';
 import styles from './zoneInfo.module.css';
@@ -27,6 +29,7 @@ export function ZoneInfoSheet({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   if (!selection) return null;
 
   const danger = selection.kind === 'danger';
@@ -77,6 +80,28 @@ export function ZoneInfoSheet({
           <span className={styles.sectionTitle}>{t('zoneInfo.why')}</span>
           <p className={styles.description}>{description || t('zoneInfo.noDescription')}</p>
         </div>
+
+        <button
+          type="button"
+          className={styles.reportLink}
+          onClick={() => {
+            onClose();
+            const ring = selection.feature.geometry.coordinates[0] ?? [];
+            const lng = ring.reduce((sum, p) => sum + p[0], 0) / (ring.length || 1);
+            const lat = ring.reduce((sum, p) => sum + p[1], 0) / (ring.length || 1);
+            navigate('/report', {
+              state: {
+                kind: 'data',
+                zoneId: properties.id,
+                zoneName: title,
+                location: ring.length ? { lat, lng } : undefined,
+              } satisfies ReportContext,
+            });
+          }}
+        >
+          <Flag size={16} aria-hidden />
+          {t('report.zoneAction')}
+        </button>
       </div>
     </Sheet>
   );

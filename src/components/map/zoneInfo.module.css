@@ -79,3 +79,15 @@
   color: hsl(var(--color-text));
   text-align: start;
 }
+
+.reportLink {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding-inline: var(--space-1);
+  color: hsl(var(--color-primary));
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+}

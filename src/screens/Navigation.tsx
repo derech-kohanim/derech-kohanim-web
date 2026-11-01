@@ -3,6 +3,7 @@ import type { LatLng, NavFeedbackRating } from '@dk/shared';
 import {
   ArrowUp,
   ChevronDown,
+  Flag,
   ListOrdered,
   OctagonAlert,
   Pause,
@@ -68,6 +69,7 @@ import {
 } from '@/voice/phrase';
 import { voiceEngine } from '@/voice/VoiceEngine';
 import { useTour } from '@/tour/Tour';
+import type { ReportContext } from '@/screens/Report';
 import { VoiceSettings } from '@/voice/VoiceSettings';
 
 import navStyles from '@/navigation/navigation.module.css';
@@ -199,6 +201,8 @@ export function Navigation() {
   const [overview, setOverview] = useState(false);
   const [stepsOpen, setStepsOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  /** Problems the driver flagged with one tap during the drive, offered for a report at the end. */
+  const [marks, setMarks] = useState<{ location: LatLng | null; at: number }[]>([]);
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [voiceDialogOpen, setVoiceDialogOpen] = useState(false);
   // Mute: a short tap toggles the voice, a long press opens the voice settings.
@@ -692,6 +696,16 @@ export function Navigation() {
           </span>
         </div>
         <IconButton
+          label={t('report.flagAction')}
+          data-tour="flag"
+          icon={<Flag size={22} />}
+          onClick={() => {
+            const point = run.position ?? null;
+            setMarks((current) => [...current, { location: point, at: Date.now() }]);
+            toast.show(t('report.flagged'), 'info');
+          }}
+        />
+        <IconButton
           label={t('navigation.allSteps')}
           data-tour="steps"
           icon={<ListOrdered size={22} />}
@@ -792,6 +806,33 @@ export function Navigation() {
             ? t('navigation.arrivedBody')
             : t('navigation.arrivedBodyUnverified')}
         </div>
+        {marks.length > 0 && (
+          <div className={styles.markedCard}>
+            <span>{t('report.markedPrompt', { count: marks.length })}</span>
+            <div className={styles.routeActions}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const first = marks[0];
+                  setMarks([]);
+                  navigate('/report', {
+                    state: {
+                      kind: 'route',
+                      routeId: route.id,
+                      location: first.location ?? undefined,
+                      marked: true,
+                    } satisfies ReportContext,
+                  });
+                }}
+              >
+                {t('report.markedDescribe')}
+              </Button>
+              <Button variant="ghost" onClick={() => setMarks([])}>
+                {t('report.markedLater')}
+              </Button>
+            </div>
+          </div>
+        )}
         <FeedbackFields
           rating={feedbackRating}
           onRate={setFeedbackRating}
