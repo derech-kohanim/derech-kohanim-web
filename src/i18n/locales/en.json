@@ -325,7 +325,7 @@
     "legal": "Policies and information",
     "voiceMale": "Male voice",
     "voiceFemale": "Female voice",
-    "voiceIdDescription": "Hebrew instructions are phrased to match the voice",
+    "voiceIdDescription": "Who reads the instructions: a male or a female speaker",
     "voiceTitle": "Voice settings"
   },
   "legal": {

@@ -67,7 +67,6 @@ import {
   type AlertPhraseKind,
 } from '@/voice/phrase';
 import { voiceEngine } from '@/voice/VoiceEngine';
-import { voiceGender, voiceTranslator } from '@/voice/voiceId';
 import { VoiceSettings } from '@/voice/VoiceSettings';
 
 import navStyles from '@/navigation/navigation.module.css';
@@ -172,11 +171,8 @@ export function Navigation() {
     [zones, dangerZones, preferences.avoidDangerZones],
   );
   const run = useNavigationRun(route, simulated, tripwireZones);
-  // Spoken texts follow the voice's gender; the screen keeps using plain `t`.
-  const vt = useMemo(
-    () => voiceTranslator(t, voiceGender(preferences.voiceId)),
-    [t, preferences.voiceId],
-  );
+  // Spoken texts are the same for every voice; only the server's recorded speaker differs.
+  const vt = t;
   /** Per-situation repeat limits for every spoken alert on this screen. */
   const alertThrottle = useRef(new AlertThrottle());
 
