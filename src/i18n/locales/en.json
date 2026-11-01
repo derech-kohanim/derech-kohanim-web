@@ -178,7 +178,8 @@
     "showUnavoided": "Show the plain route without avoidance",
     "unavoidedWarning": "The plain route crosses a forbidden zone and is shown for comparison only. It cannot be navigated.",
     "addFavorite": "Save place",
-    "computingHint": "Building a clean route around the zones"
+    "computingHint": "Building a clean route around the zones",
+    "savedFavorite": "Saved, tap to remove"
   },
   "voice": {
     "prefix": "In",
@@ -467,7 +468,8 @@
     "setHome": "Set home",
     "setWork": "Set work",
     "slotEmpty": "Not set",
-    "homeWorkHint": "You can set home and work from a route"
+    "homeWorkHint": "You can set home and work from a route",
+    "removedToast": "Removed from saved places"
   },
   "map": {
     "fallbackTitle": "Schematic map",

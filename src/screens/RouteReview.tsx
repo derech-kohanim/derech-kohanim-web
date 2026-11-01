@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { PlaceCategory } from '@dk/shared';
+import type { PlaceCategory, SavedPlace } from '@dk/shared';
 import {
   AlertTriangle,
   Briefcase,
@@ -37,6 +37,8 @@ import { useTour } from '@/tour/Tour';
 import type { ReportContext } from '@/screens/Report';
 import { usePreferences } from '@/state/PreferencesProvider';
 import { useTrip } from '@/state/TripProvider';
+import { useAuth } from '@/state/AuthProvider';
+import { distanceMeters } from '@/lib/geo';
 import { useRequireAccount } from '@/state/useRequireAccount';
 import { voiceEngine } from '@/voice/VoiceEngine';
 
@@ -92,6 +94,44 @@ export function RouteReview() {
     if (!destination) navigate('/', { replace: true });
   }, [destination, navigate]);
 
+  // The saved place this destination already is, if any: same id, or within 50 m of it.
+  const { user } = useAuth();
+  const [savedMatch, setSavedMatch] = useState<SavedPlace | null>(null);
+  useEffect(() => {
+    if (!user || !destination) {
+      setSavedMatch(null);
+      return;
+    }
+    let cancelled = false;
+    void api
+      .savedPlaces()
+      .then((places) => {
+        if (cancelled) return;
+        setSavedMatch(
+          places.find(
+            (place) =>
+              place.id === destination.id ||
+              distanceMeters(place.location, destination.location) <= 50,
+          ) ?? null,
+        );
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [user, destination]);
+
+  async function removeFavorite() {
+    if (!savedMatch) return;
+    try {
+      await api.removeSavedPlace(savedMatch.id);
+      setSavedMatch(null);
+      toast.show(t('saved.removedToast'), 'info');
+    } catch {
+      toast.show(t('errors.generic'), 'danger');
+    }
+  }
+
   async function saveFavorite(category: PlaceCategory) {
     if (!destination) return;
     try {
@@ -107,12 +147,13 @@ export function RouteReview() {
           : category === 'work'
             ? t('category.work')
             : destination.title;
-      await api.addSavedPlace({
+      const created = await api.addSavedPlace({
         label,
         category,
         location: destination.location,
         address: destination.subtitle,
       });
+      setSavedMatch(created);
       toast.show(t('saved.savedToast'), 'success');
     } catch {
       toast.show(t('errors.generic'), 'danger');
@@ -171,9 +212,18 @@ export function RouteReview() {
             />
             <IconButton
               data-tour="save"
-              label={t('route.addFavorite')}
-              icon={<Star size={22} />}
-              onClick={() => requireAccount(() => setSaveOpen(true))}
+              label={savedMatch ? t('route.savedFavorite') : t('route.addFavorite')}
+              aria-pressed={savedMatch !== null}
+              icon={
+                <Star
+                  size={22}
+                  fill={savedMatch ? 'currentColor' : 'none'}
+                  className={savedMatch ? styles.starSaved : undefined}
+                />
+              }
+              onClick={() =>
+                savedMatch ? void removeFavorite() : requireAccount(() => setSaveOpen(true))
+              }
             />
             </>
           ) : undefined

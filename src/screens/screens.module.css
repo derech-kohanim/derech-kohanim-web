@@ -1655,3 +1655,7 @@
   color: hsl(var(--color-text-muted));
   text-align: center;
 }
+
+.starSaved {
+  color: hsl(var(--color-primary));
+}
